@@ -36,7 +36,7 @@ async function initDB() {
     // 3. Drop all tables matching our models first to ensure a clean slate
     const tables = [
       'delivery_details', 'purchase_order_detail', 'purchase_order', 'purchase_order_status',
-      'stock_adjustment', 'supplier_product_stock', 'product_reorder', 'inventory', 'warehouse', 'warehouse_address',
+      'stock_adjustment', 'product_reorder', 'inventory', 'warehouse', 'warehouse_address',
       'payment', 'sales_transaction_details', 'sales_transaction', 'sales_transaction_fees', 'sales_transaction_rates',
       'product_description', 'product',
       'supplier_contact', 'supplier', 'supplier_bank_details', 'supplier_address',

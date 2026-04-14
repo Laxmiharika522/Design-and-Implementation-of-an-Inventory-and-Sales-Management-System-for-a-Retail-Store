@@ -69,8 +69,8 @@ export const DashboardLayout = () => {
       {/* Collapsible Sidebar */}
       <motion.aside 
         initial={false}
-        animate={{ width: isSidebarOpen ? 260 : 80 }}
-        className="flex flex-col bg-white dark:bg-slate-900 border-r border-slate-200/60 dark:border-slate-800/60 shadow-[4px_0_24px_rgba(0,0,0,0.02)] pt-2 relative z-20"
+        animate={{ width: isSidebarOpen ? 300 : 88 }}
+        className="flex flex-col bg-white dark:bg-slate-900 border-r border-slate-200/60 dark:border-slate-800/60 shadow-xl pt-4 relative z-20"
       >
         <div className="flex items-center justify-between p-4 mb-2">
           <AnimatePresence mode="wait">
@@ -99,7 +99,7 @@ export const DashboardLayout = () => {
           </AnimatePresence>
         </div>
 
-        <nav className="flex-1 px-3 space-y-1.5 overflow-y-auto mt-4 overflow-x-hidden">
+        <nav className="flex-1 px-5 space-y-2 overflow-y-auto mt-6 overflow-x-hidden">
           {navItems.filter(item => item.roles.includes(user?.role)).map((item) => {
             const Icon = item.icon;
             const isActive = location.pathname === item.path;

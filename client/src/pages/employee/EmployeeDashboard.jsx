@@ -41,7 +41,7 @@ export default function EmployeeDashboard() {
       variants={containerVariants} 
       initial="hidden" 
       animate="show" 
-      className="max-w-7xl mx-auto space-y-8 p-4"
+      className="max-w-[1500px] w-full mx-auto space-y-10 p-6 xl:p-10"
     >
       {/* Header Section */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -63,7 +63,7 @@ export default function EmployeeDashboard() {
           </div>
           <div className="relative z-10">
             <p className="text-indigo-400 text-xs font-black uppercase tracking-[0.2em] mb-2">Current Designation</p>
-            <h3 className="text-4xl font-black tracking-tight">{stats?.role}</h3>
+            <h3 className="text-5xl font-black tracking-tighter mt-2">{stats?.role}</h3>
             <div className="mt-6 flex items-center gap-2">
               <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
               <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">Active Session</span>
@@ -78,7 +78,7 @@ export default function EmployeeDashboard() {
           </div>
           <div className="relative z-10">
             <p className="text-indigo-200 text-xs font-black uppercase tracking-[0.2em] mb-2">Lifetime Sales Activity</p>
-            <h3 className="text-5xl font-black tracking-tighter">{stats?.transactionCount}</h3>
+            <h3 className="text-6xl font-black tracking-tighter mt-2">{stats?.transactionCount}</h3>
             <p className="mt-2 text-indigo-100 font-bold opacity-80 uppercase text-[10px] tracking-widest">Total Transactions Processed</p>
           </div>
         </motion.div>
@@ -90,7 +90,7 @@ export default function EmployeeDashboard() {
           </div>
           <div className="relative z-10">
             <p className="text-emerald-100 text-xs font-black uppercase tracking-[0.2em] mb-2">Revenue Contribution</p>
-            <h3 className="text-4xl font-black tracking-tight">₹{Number(stats?.totalSalesValue || 0).toLocaleString('en-IN', { maximumFractionDigits: 0 })}</h3>
+            <h3 className="text-5xl font-black tracking-tighter mt-2">₹{Number(stats?.totalSalesValue || 0).toLocaleString('en-IN', { maximumFractionDigits: 0 })}</h3>
             <p className="mt-2 text-emerald-500 bg-white/10 self-start px-2 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest backdrop-blur-sm">Total Sales Value</p>
           </div>
         </motion.div>

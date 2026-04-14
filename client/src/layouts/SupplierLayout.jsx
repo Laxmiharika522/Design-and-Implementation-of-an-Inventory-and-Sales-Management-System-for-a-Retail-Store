@@ -48,7 +48,7 @@ export const SupplierLayout = () => {
       {/* Sidebar */}
       <motion.aside
         initial={false}
-        animate={{ width: isSidebarOpen ? 240 : 72 }}
+        animate={{ width: isSidebarOpen ? 300 : 72 }}
         className="flex flex-col bg-white border-r border-slate-200/60 shadow-sm pt-2 relative z-20 overflow-hidden"
       >
         <div className="flex items-center justify-between p-4 mb-2">

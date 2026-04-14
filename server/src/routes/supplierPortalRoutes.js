@@ -142,7 +142,7 @@ router.put('/orders/:id/status', async (req, res) => {
     }
 
     if (status === 'Delivered' && oldStatus !== 'Delivered') {
-      // Stock update logic for supplier_product_stock was removed.
+      // No extra stock logic required here currently.
     }
 
     await connection.commit();

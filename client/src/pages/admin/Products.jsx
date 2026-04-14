@@ -15,22 +15,24 @@ export default function Products() {
     category_id: '', supplier_id: '', image_url: '', expiry_date: ''
   });
 
+  const getHeaders = () => ({ headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } });
+
   // Fetch Queries
   const { data: products, isLoading } = useQuery({
     queryKey: ['products'],
-    queryFn: async () => (await axios.get('http://localhost:5000/api/products')).data
+    queryFn: async () => (await axios.get('http://localhost:5000/api/products', getHeaders())).data
   });
-  const { data: categories } = useQuery({ queryKey: ['categories'], queryFn: async () => (await axios.get('http://localhost:5000/api/categories')).data });
-  const { data: suppliers } = useQuery({ queryKey: ['suppliers'], queryFn: async () => (await axios.get('http://localhost:5000/api/suppliers')).data });
-  const { data: hsnCodes } = useQuery({ queryKey: ['hsnCodes'], queryFn: async () => (await axios.get('http://localhost:5000/api/products/hsn-codes')).data });
+  const { data: categories } = useQuery({ queryKey: ['categories'], queryFn: async () => (await axios.get('http://localhost:5000/api/categories', getHeaders())).data });
+  const { data: suppliers } = useQuery({ queryKey: ['suppliers'], queryFn: async () => (await axios.get('http://localhost:5000/api/suppliers', getHeaders())).data });
+  const { data: hsnCodes } = useQuery({ queryKey: ['hsnCodes'], queryFn: async () => (await axios.get('http://localhost:5000/api/products/hsn-codes', getHeaders())).data });
 
   // Mutations
   const saveMutation = useMutation({
     mutationFn: async (newProduct) => {
       if (editingProduct) {
-        return await axios.put(`http://localhost:5000/api/products/${editingProduct.product_id}`, newProduct);
+        return await axios.put(`http://localhost:5000/api/products/${editingProduct.product_id}`, newProduct, getHeaders());
       }
-      return await axios.post('http://localhost:5000/api/products', newProduct);
+      return await axios.post('http://localhost:5000/api/products', newProduct, getHeaders());
     },
     onSuccess: () => {
       queryClient.invalidateQueries(['products']);
@@ -43,7 +45,7 @@ export default function Products() {
   });
 
   const deleteMutation = useMutation({
-    mutationFn: async (id) => await axios.delete(`http://localhost:5000/api/products/${id}`),
+    mutationFn: async (id) => await axios.delete(`http://localhost:5000/api/products/${id}`, getHeaders()),
     onSuccess: () => queryClient.invalidateQueries(['products'])
   });
 
