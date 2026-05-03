@@ -2343,13 +2343,13 @@ async function run() {
     const tablesToClear = [
       'purchase_order_detail', 'purchase_order',
       'sales_transaction_details', 'payment', 'stock_adjustment', 
-      'sales_transaction', 'inventory', 'product_reorder', 'Product_Description',
+      'sales_transaction', 'inventory', 'product_reorder', 'product_description',
       'product', 'hsn_tax', 'category', 'warehouse', 'warehouse_address',
       'supplier_contact', 'supplier_address', 'supplier_bank_details', 'supplier'
     ];
 
     const tablesToReset = [
-      'sales_transaction', 'payment', 'inventory', 'Product_Description', 'product', 'category', 'warehouse', 'supplier'
+      'sales_transaction', 'payment', 'inventory', 'product_description', 'product', 'category', 'warehouse', 'supplier'
     ];
 
     for (const table of tablesToClear) {
@@ -2500,7 +2500,7 @@ async function run() {
 
       const productDesc = p.description || `Premium quality ${p.name}. Perfect for your daily needs and ensuring the best standards in its category (${p.category_name}).`;
       await conn.query(
-        'INSERT INTO Product_Description (product_id, product_description) VALUES (?, ?)',
+        'INSERT INTO product_description (product_id, product_description) VALUES (?, ?)',
         [productId, productDesc]
       );
 

@@ -10,16 +10,35 @@ const __dirname = path.dirname(__filename);
 
 async function initDB() {
   console.log('Starting Database Initialization...');
-  
+
+  // Support Railway's MYSQL_PUBLIC_URL connection string
+  const connectionUrl = process.env.MYSQL_PUBLIC_URL || process.env.DATABASE_URL;
+  let connConfig;
+
+  if (connectionUrl) {
+    const url = new URL(connectionUrl);
+    connConfig = {
+      host:               url.hostname,
+      port:               parseInt(url.port || '3306', 10),
+      user:               url.username,
+      password:           url.password,
+      database:           url.pathname.replace('/', ''),
+      multipleStatements: true,
+      ssl:                { rejectUnauthorized: false }
+    };
+  } else {
+    connConfig = {
+      host:               process.env.DB_HOST,
+      port:               parseInt(process.env.DB_PORT || '3306', 10),
+      user:               process.env.DB_USER,
+      password:           process.env.DB_PASSWORD,
+      database:           process.env.DB_NAME,
+      multipleStatements: true
+    };
+  }
+
   // Create a dedicated connection with multipleStatements true
-  const conn = await mysql.createConnection({
-    host: process.env.DB_HOST,
-    port: parseInt(process.env.DB_PORT || '3306', 10),
-    user: process.env.DB_USER,
-    password: process.env.DB_PASSWORD,
-    database: process.env.DB_NAME,
-    multipleStatements: true
-  });
+  const conn = await mysql.createConnection(connConfig);
 
   try {
     // 1. Read files from models directory prioritizing file names to maintain foreign key integrity
