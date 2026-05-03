@@ -1,0 +1,35 @@
+services:
+  # ─── 1. Backend API (Node.js) ───
+  - type: web
+    name: inventory-backend
+    env: node
+    plan: free
+    rootDir: server
+    buildCommand: npm install
+    startCommand: node src/index.js
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 5000
+      - key: JWT_SECRET
+        generateValue: true # Render will automatically generate a secure secret!
+      - key: CLIENT_URL
+        value: '*' # Temporarily allow all origins
+      - key: MYSQL_PUBLIC_URL
+        sync: false # You will need to paste your Railway URL in the Render dashboard
+
+  # ─── 2. Frontend (React + Vite) ───
+  - type: web
+    name: inventory-frontend
+    env: static
+    plan: free
+    rootDir: client
+    buildCommand: npm install && npm run build
+    staticPublishPath: dist
+    envVars:
+      - key: VITE_API_URL
+        fromService:
+          type: web
+          name: inventory-backend
+          envVarKey: RENDER_EXTERNAL_URL
