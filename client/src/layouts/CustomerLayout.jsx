@@ -50,7 +50,7 @@ export const CustomerLayout = () => {
         initial={false}
         animate={{ width: isSidebarOpen ? 240 : 72 }}
         className={clsx(
-          "flex flex-col bg-white border-r border-slate-200/60 shadow-sm pt-2 relative z-50 overflow-hidden",
+          "flex flex-col bg-white border-r border-slate-200/60 shadow-sm pt-2 z-50 overflow-hidden",
           "fixed inset-y-0 left-0 h-full transform transition-transform duration-300 ease-in-out md:relative md:translate-x-0",
           isMobileSidebarOpen ? "translate-x-0" : "-translate-x-full"
         )}

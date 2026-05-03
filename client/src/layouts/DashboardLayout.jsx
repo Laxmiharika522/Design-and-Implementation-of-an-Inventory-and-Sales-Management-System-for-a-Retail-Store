@@ -85,7 +85,7 @@ export const DashboardLayout = () => {
         initial={false}
         animate={{ width: isSidebarOpen ? 300 : 88 }}
         className={clsx(
-          "flex flex-col bg-white dark:bg-slate-900 border-r border-slate-200/60 dark:border-slate-800/60 shadow-xl pt-4 relative z-50",
+          "flex flex-col bg-white dark:bg-slate-900 border-r border-slate-200/60 dark:border-slate-800/60 shadow-xl pt-4 z-50",
           "fixed inset-y-0 left-0 h-full transform transition-transform duration-300 ease-in-out md:relative md:translate-x-0",
           isMobileSidebarOpen ? "translate-x-0" : "-translate-x-full"
         )}
