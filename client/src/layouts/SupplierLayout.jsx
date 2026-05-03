@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Navigate, Outlet, useLocation, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { motion, AnimatePresence } from 'framer-motion';
-import { LogOut, Truck, ClipboardList, User, ChevronLeft, ChevronRight, Package, BarChart3, IndianRupee, Phone, Building2, Hash, MapPin } from 'lucide-react';
+import { LogOut, Truck, ClipboardList, User, ChevronLeft, ChevronRight, Package, BarChart3, IndianRupee, Phone, Building2, Hash, MapPin, Menu } from 'lucide-react';
 import clsx from 'clsx';
 import { useQuery } from '@tanstack/react-query';
 import axios from 'axios';
@@ -18,6 +18,7 @@ export const SupplierLayout = () => {
   const { user, logout } = useAuth();
   const location = useLocation();
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
 
   // Force light mode in Supplier Portal as requested
   useState(() => {
@@ -45,11 +46,28 @@ export const SupplierLayout = () => {
 
   return (
     <div className="min-h-screen flex bg-slate-50 text-slate-900 font-sans">
+      {/* Mobile Overlay */}
+      <AnimatePresence>
+        {isMobileSidebarOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setIsMobileSidebarOpen(false)}
+            className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-40 md:hidden"
+          />
+        )}
+      </AnimatePresence>
+
       {/* Sidebar */}
       <motion.aside
         initial={false}
         animate={{ width: isSidebarOpen ? 300 : 72 }}
-        className="flex flex-col bg-white border-r border-slate-200/60 shadow-sm pt-2 relative z-20 overflow-hidden"
+        className={clsx(
+          "flex flex-col bg-white border-r border-slate-200/60 shadow-sm pt-2 relative z-50 overflow-hidden",
+          "fixed inset-y-0 left-0 h-full transform transition-transform duration-300 ease-in-out md:relative md:translate-x-0",
+          isMobileSidebarOpen ? "translate-x-0" : "-translate-x-full"
+        )}
       >
         <div className="flex items-center justify-between p-4 mb-2">
           <AnimatePresence mode="wait">
@@ -152,7 +170,7 @@ export const SupplierLayout = () => {
           })}
         </nav>
 
-        <div className="p-3 space-y-2 mt-auto">
+        <div className="p-3 space-y-2 mt-auto hidden md:block">
           <button onClick={logout} className={clsx("w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-red-500 hover:bg-red-50 transition-colors", !isSidebarOpen && "justify-center")}>
             <LogOut size={18} className="shrink-0" />
             {isSidebarOpen && <span className="text-sm font-black font-black uppercase tracking-widest">Sign Out</span>}
@@ -161,14 +179,28 @@ export const SupplierLayout = () => {
             {isSidebarOpen ? <ChevronLeft size={18} /> : <ChevronRight size={18} />}
           </button>
         </div>
+        
+        {/* Mobile bottom buttons */}
+        <div className="p-3 space-y-2 mt-auto md:hidden">
+          <button onClick={logout} className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-red-500 hover:bg-red-50 transition-colors">
+            <LogOut size={18} className="shrink-0" />
+            <span className="text-sm font-black font-black uppercase tracking-widest">Sign Out</span>
+          </button>
+        </div>
       </motion.aside>
 
       {/* Main */}
       <main className="flex-1 flex flex-col min-w-0 overflow-hidden">
-        <header className="h-16 px-8 flex items-center justify-between bg-white border-b border-slate-200/60 shadow-sm sticky top-0 z-10">
+        <header className="h-16 px-4 md:px-8 flex items-center justify-between bg-white border-b border-slate-200/60 shadow-sm sticky top-0 z-30">
           <div className="flex items-center gap-3">
-            <Package size={20} className="text-purple-500" />
-            <h2 className="font-black text-xl">Supplier Portal</h2>
+            <button 
+               onClick={() => setIsMobileSidebarOpen(true)}
+               className="md:hidden p-2 -ml-2 text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
+             >
+               <Menu size={24} />
+             </button>
+            <Package size={20} className="text-purple-500 hidden md:block" />
+            <h2 className="font-black text-lg md:text-xl truncate">Supplier Portal</h2>
           </div>
           <div className="flex items-center gap-3">
             <div className="w-9 h-9 rounded-full bg-purple-100 text-purple-700 flex items-center justify-center font-bold text-sm font-black">
@@ -180,7 +212,7 @@ export const SupplierLayout = () => {
             </div>
           </div>
         </header>
-        <div className="flex-1 overflow-auto p-6 md:p-8">
+        <div className="flex-1 overflow-auto p-4 md:p-6 lg:p-8">
           <AnimatePresence mode="wait">
             <motion.div key={location.pathname} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.2 }}>
               <Outlet />

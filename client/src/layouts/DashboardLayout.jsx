@@ -26,6 +26,7 @@ export const DashboardLayout = () => {
   const location = useLocation();
   const [isDark, setIsDark] = useState(true);
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
 
@@ -66,11 +67,28 @@ export const DashboardLayout = () => {
   return (
     <div className="min-h-screen flex bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-slate-50 font-sans transition-colors duration-300">
       
+      {/* Mobile Overlay */}
+      <AnimatePresence>
+        {isMobileSidebarOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setIsMobileSidebarOpen(false)}
+            className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-40 md:hidden"
+          />
+        )}
+      </AnimatePresence>
+
       {/* Collapsible Sidebar */}
       <motion.aside 
         initial={false}
         animate={{ width: isSidebarOpen ? 300 : 88 }}
-        className="flex flex-col bg-white dark:bg-slate-900 border-r border-slate-200/60 dark:border-slate-800/60 shadow-xl pt-4 relative z-20"
+        className={clsx(
+          "flex flex-col bg-white dark:bg-slate-900 border-r border-slate-200/60 dark:border-slate-800/60 shadow-xl pt-4 relative z-50",
+          "fixed inset-y-0 left-0 h-full transform transition-transform duration-300 ease-in-out md:relative md:translate-x-0",
+          isMobileSidebarOpen ? "translate-x-0" : "-translate-x-full"
+        )}
       >
         <div className="flex items-center justify-between p-4 mb-2">
           <AnimatePresence mode="wait">
@@ -137,7 +155,7 @@ export const DashboardLayout = () => {
           })}
         </nav>
 
-        <div className="p-4 mt-auto">
+        <div className="p-4 mt-auto hidden md:block">
           <button 
              onClick={() => setIsSidebarOpen(!isSidebarOpen)}
              className="w-full p-2 flex items-center justify-center rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-500 transition-colors"
@@ -151,9 +169,15 @@ export const DashboardLayout = () => {
       <main className="flex-1 flex flex-col min-w-0 overflow-hidden relative">
         
         {/* Top Navbar */}
-        <header className="glass h-16 px-8 flex items-center justify-between z-10 sticky top-0">
-          <div className="flex items-center gap-4 flex-1">
-             <h2 className="text-xl font-bold tracking-tight">{currentRouteName}</h2>
+        <header className="glass h-16 px-4 md:px-8 flex items-center justify-between z-30 sticky top-0 border-b border-slate-200/50 dark:border-slate-800/50">
+          <div className="flex items-center gap-3 flex-1">
+             <button 
+               onClick={() => setIsMobileSidebarOpen(true)}
+               className="md:hidden p-2 -ml-2 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors"
+             >
+               <Menu size={24} />
+             </button>
+             <h2 className="text-lg md:text-xl font-bold tracking-tight truncate">{currentRouteName}</h2>
           </div>
           
           <div className="flex items-center gap-4 shrink-0">
@@ -208,7 +232,7 @@ export const DashboardLayout = () => {
         </header>
 
         {/* Page Content with Framer Motion Route Transitions */}
-        <div className="flex-1 overflow-auto p-6 md:p-8">
+        <div className="flex-1 overflow-auto p-4 md:p-8">
           <AnimatePresence mode="wait">
              <motion.div
                key={location.pathname}

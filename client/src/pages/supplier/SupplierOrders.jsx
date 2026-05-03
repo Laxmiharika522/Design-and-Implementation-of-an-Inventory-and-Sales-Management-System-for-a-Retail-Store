@@ -160,7 +160,7 @@ export default function SupplierOrders() {
                 {isExpanded && order.PurchaseOrderDetails?.length > 0 && (
                   <div className="px-6 pb-5">
                     <div className="bg-slate-50 rounded-2xl p-4 border border-slate-200">
-                      <table className="w-full text-sm">
+                      <div className="overflow-x-auto w-full pb-4"><table className="w-full text-sm">
                         <thead>
                           <tr className="text-slate-500 text-left text-xs border-b border-slate-200">
                             <th className="pb-2 font-semibold">Product</th>
@@ -232,7 +232,7 @@ export default function SupplierOrders() {
                             </tr>
                           </>
                         </tfoot>
-                      </table>
+                      </table></div>
                       {order.DeliveryDetail && (
                         <div className="mt-3 pt-3 border-t border-slate-200 flex gap-6 text-xs text-slate-500">
                           <span>🚚 <b>Mode:</b> {order.DeliveryDetail.shipping_mode || '—'}</span>
