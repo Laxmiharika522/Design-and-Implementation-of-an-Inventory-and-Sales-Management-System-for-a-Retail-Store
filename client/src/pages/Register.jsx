@@ -179,7 +179,7 @@ export default function Register() {
             {/* Role Selection Grid */}
             <div>
               <p className="text-xs font-black text-slate-800 uppercase tracking-[0.2em] mb-4">I am registering as a...</p>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 {REGISTRATION_ROLES.map(option => {
                   const Icon = option.icon;
                   const isSelected = selectedRoleOption.id === option.id;
