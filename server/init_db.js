@@ -18,21 +18,21 @@ async function initDB() {
   if (connectionUrl) {
     const url = new URL(connectionUrl);
     connConfig = {
-      host:               url.hostname,
-      port:               parseInt(url.port || '3306', 10),
-      user:               url.username,
-      password:           url.password,
-      database:           url.pathname.replace('/', ''),
+      host: url.hostname,
+      port: parseInt(url.port || '3306', 10),
+      user: url.username,
+      password: url.password,
+      database: url.pathname.replace('/', ''),
       multipleStatements: true,
-      ssl:                { rejectUnauthorized: false }
+      ssl: { rejectUnauthorized: false }
     };
   } else {
     connConfig = {
-      host:               process.env.DB_HOST,
-      port:               parseInt(process.env.DB_PORT || '3306', 10),
-      user:               process.env.DB_USER,
-      password:           process.env.DB_PASSWORD,
-      database:           process.env.DB_NAME,
+      host: process.env.DB_HOST,
+      port: parseInt(process.env.DB_PORT || '3306', 10),
+      user: process.env.DB_USER,
+      password: process.env.DB_PASSWORD,
+      database: process.env.DB_NAME,
       multipleStatements: true
     };
   }
@@ -44,8 +44,8 @@ async function initDB() {
     // 1. Read files from models directory prioritizing file names to maintain foreign key integrity
     const modelsDir = path.join(__dirname, 'src', 'models');
     const files = fs.readdirSync(modelsDir)
-                    .filter(f => f.endsWith('.sql'))
-                    .sort(); // 01, 02, 03... order is guaranteed
+      .filter(f => f.endsWith('.sql'))
+      .sort(); // 01, 02, 03... order is guaranteed
 
     console.log(`Found ${files.length} model files to execute.`);
 
@@ -62,7 +62,7 @@ async function initDB() {
       'customer', 'employee', 'employee_address',
       'category', 'hsn_tax'
     ];
-    for(const t of tables) {
+    for (const t of tables) {
       await conn.query(`DROP TABLE IF EXISTS \`${t}\``);
     }
     console.log('Cleaned old schema tables.');
@@ -72,7 +72,7 @@ async function initDB() {
       const sqlPath = path.join(modelsDir, file);
       console.log(`Executing ${file}...`);
       const sqlQueries = fs.readFileSync(sqlPath, 'utf8');
-      
+
       // Execute the entire file script block
       await conn.query(sqlQueries);
     }
@@ -82,13 +82,13 @@ async function initDB() {
 
     // 5. Run the Data Seeder
     console.log('\\nCalling Data Seeder...');
-    
+
     // We import dynamically to execute run() inside seed_all_products.js 
     // Wait, seed_all_products.js calls run() automatically at the end.
     // We can just use child_process or async import if there's no top-level blocking await.
     const { execSync } = await import('child_process');
     execSync('node seed_all_products.js', { stdio: 'inherit', cwd: __dirname });
-    
+
     console.log('✅ Full initialization and seeding completed.');
 
   } catch (err) {
