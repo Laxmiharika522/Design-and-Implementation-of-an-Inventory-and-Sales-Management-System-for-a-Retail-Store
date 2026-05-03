@@ -13,12 +13,12 @@ export default function SupplierDashboard() {
 
   const { data: stats } = useQuery({
     queryKey: ['supplierStats'],
-    queryFn: () => axios.get('http://localhost:5000/api/supplier/stats').then(r => r.data)
+    queryFn: () => axios.get(import.meta.env.VITE_API_URL + '/supplier/stats').then(r => r.data)
   });
 
   const { data: orders = [] } = useQuery({
     queryKey: ['supplierOrders'],
-    queryFn: () => axios.get('http://localhost:5000/api/supplier/orders').then(r => r.data)
+    queryFn: () => axios.get(import.meta.env.VITE_API_URL + '/supplier/orders').then(r => r.data)
   });
 
   const recentOrders = orders.slice(0, 5);

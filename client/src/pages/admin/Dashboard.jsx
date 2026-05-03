@@ -19,7 +19,7 @@ export default function Dashboard() {
   const { data: stats, isLoading } = useQuery({
     queryKey: ['dashboardStats', period],
     queryFn: async () => {
-      const { data } = await axios.get(`http://localhost:5000/api/reports/dashboard?period=${period}`, {
+      const { data } = await axios.get(`${import.meta.env.VITE_API_URL}/reports/dashboard?period=${period}`, {
         headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
       });
       return data;

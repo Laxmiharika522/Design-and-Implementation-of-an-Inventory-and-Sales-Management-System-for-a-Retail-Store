@@ -8,7 +8,7 @@ export default function EmployeeDashboard() {
   const { data: stats, isLoading } = useQuery({
     queryKey: ['employeeStats'],
     queryFn: async () => {
-      const { data } = await axios.get('http://localhost:5000/api/reports/employee-stats', {
+      const { data } = await axios.get(import.meta.env.VITE_API_URL + '/reports/employee-stats', {
         headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
       });
       return data;

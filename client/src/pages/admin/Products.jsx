@@ -20,19 +20,19 @@ export default function Products() {
   // Fetch Queries
   const { data: products, isLoading } = useQuery({
     queryKey: ['products'],
-    queryFn: async () => (await axios.get('http://localhost:5000/api/products', getHeaders())).data
+    queryFn: async () => (await axios.get(import.meta.env.VITE_API_URL + '/products', getHeaders())).data
   });
-  const { data: categories } = useQuery({ queryKey: ['categories'], queryFn: async () => (await axios.get('http://localhost:5000/api/categories', getHeaders())).data });
-  const { data: suppliers } = useQuery({ queryKey: ['suppliers'], queryFn: async () => (await axios.get('http://localhost:5000/api/suppliers', getHeaders())).data });
-  const { data: hsnCodes } = useQuery({ queryKey: ['hsnCodes'], queryFn: async () => (await axios.get('http://localhost:5000/api/products/hsn-codes', getHeaders())).data });
+  const { data: categories } = useQuery({ queryKey: ['categories'], queryFn: async () => (await axios.get(import.meta.env.VITE_API_URL + '/categories', getHeaders())).data });
+  const { data: suppliers } = useQuery({ queryKey: ['suppliers'], queryFn: async () => (await axios.get(import.meta.env.VITE_API_URL + '/suppliers', getHeaders())).data });
+  const { data: hsnCodes } = useQuery({ queryKey: ['hsnCodes'], queryFn: async () => (await axios.get(import.meta.env.VITE_API_URL + '/products/hsn-codes', getHeaders())).data });
 
   // Mutations
   const saveMutation = useMutation({
     mutationFn: async (newProduct) => {
       if (editingProduct) {
-        return await axios.put(`http://localhost:5000/api/products/${editingProduct.product_id}`, newProduct, getHeaders());
+        return await axios.put(`${import.meta.env.VITE_API_URL}/products/${editingProduct.product_id}`, newProduct, getHeaders());
       }
-      return await axios.post('http://localhost:5000/api/products', newProduct, getHeaders());
+      return await axios.post(import.meta.env.VITE_API_URL + '/products', newProduct, getHeaders());
     },
     onSuccess: () => {
       queryClient.invalidateQueries(['products']);
@@ -45,7 +45,7 @@ export default function Products() {
   });
 
   const deleteMutation = useMutation({
-    mutationFn: async (id) => await axios.delete(`http://localhost:5000/api/products/${id}`, getHeaders()),
+    mutationFn: async (id) => await axios.delete(`${import.meta.env.VITE_API_URL}/products/${id}`, getHeaders()),
     onSuccess: () => queryClient.invalidateQueries(['products'])
   });
 

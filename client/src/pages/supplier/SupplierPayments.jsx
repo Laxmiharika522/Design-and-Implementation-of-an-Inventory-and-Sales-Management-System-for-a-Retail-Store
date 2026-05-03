@@ -5,7 +5,7 @@ import { IndianRupee, CheckCircle, Clock, Loader2 } from 'lucide-react';
 export default function SupplierPayments() {
   const { data: payments = [], isLoading } = useQuery({
     queryKey: ['supplierPayments'],
-    queryFn: () => axios.get('http://localhost:5000/api/supplier/payments', {
+    queryFn: () => axios.get(import.meta.env.VITE_API_URL + '/supplier/payments', {
       headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
     }).then(r => r.data)
   });

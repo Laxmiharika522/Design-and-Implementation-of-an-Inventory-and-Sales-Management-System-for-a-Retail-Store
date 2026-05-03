@@ -14,12 +14,12 @@ export default function CustomerOrders() {
 
   const { data: orders = [], isLoading } = useQuery({
     queryKey: ['customerOrders'],
-    queryFn: () => axios.get('http://localhost:5000/api/customer/orders').then(r => r.data)
+    queryFn: () => axios.get(import.meta.env.VITE_API_URL + '/customer/orders').then(r => r.data)
   });
 
   const { data: profile } = useQuery({
     queryKey: ['customerProfile'],
-    queryFn: () => axios.get('http://localhost:5000/api/customer/profile', {
+    queryFn: () => axios.get(import.meta.env.VITE_API_URL + '/customer/profile', {
       headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
     }).then(r => r.data),
   });

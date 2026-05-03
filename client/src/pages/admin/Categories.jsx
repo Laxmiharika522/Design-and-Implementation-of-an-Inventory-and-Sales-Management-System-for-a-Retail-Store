@@ -14,15 +14,15 @@ export default function Categories() {
 
   const { data: categories, isLoading } = useQuery({
     queryKey: ['categories'],
-    queryFn: async () => (await axios.get('http://localhost:5000/api/categories')).data
+    queryFn: async () => (await axios.get(import.meta.env.VITE_API_URL + '/categories')).data
   });
 
   const saveMutation = useMutation({
     mutationFn: async (data) => {
       if (editingCategory) {
-        return (await axios.put(`http://localhost:5000/api/categories/${editingCategory.category_id}`, data)).data;
+        return (await axios.put(`${import.meta.env.VITE_API_URL}/categories/${editingCategory.category_id}`, data)).data;
       }
-      return (await axios.post('http://localhost:5000/api/categories', data)).data;
+      return (await axios.post(import.meta.env.VITE_API_URL + '/categories', data)).data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries(['categories']);
@@ -32,7 +32,7 @@ export default function Categories() {
   });
 
   const deleteMutation = useMutation({
-    mutationFn: async (id) => await axios.delete(`http://localhost:5000/api/categories/${id}`),
+    mutationFn: async (id) => await axios.delete(`${import.meta.env.VITE_API_URL}/categories/${id}`),
     onSuccess: () => queryClient.invalidateQueries(['categories']),
     onError: (err) => alert('Error: ' + (err.response?.data?.message || err.message))
   });

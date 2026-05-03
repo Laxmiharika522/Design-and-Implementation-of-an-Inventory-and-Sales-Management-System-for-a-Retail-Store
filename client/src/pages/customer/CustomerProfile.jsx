@@ -17,7 +17,7 @@ export default function CustomerProfile() {
   // Fetch current user details
   const { data: profile, isLoading } = useQuery({
     queryKey: ['customerProfile'],
-    queryFn: () => axios.get('http://localhost:5000/api/customer/profile', {
+    queryFn: () => axios.get(import.meta.env.VITE_API_URL + '/customer/profile', {
       headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
     }).then(r => r.data),
   });
@@ -35,7 +35,7 @@ export default function CustomerProfile() {
   }, [profile]);
 
   const updateProfile = useMutation({
-    mutationFn: (data) => axios.put('http://localhost:5000/api/customer/profile', data, {
+    mutationFn: (data) => axios.put(import.meta.env.VITE_API_URL + '/customer/profile', data, {
       headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
     }),
     onSuccess: () => {

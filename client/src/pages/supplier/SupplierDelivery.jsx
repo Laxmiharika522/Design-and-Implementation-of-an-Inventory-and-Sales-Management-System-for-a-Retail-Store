@@ -21,7 +21,7 @@ export default function SupplierDelivery() {
 
   const { data: orders = [], isLoading } = useQuery({
     queryKey: ['supplierDelivery'],
-    queryFn: () => axios.get('http://localhost:5000/api/supplier/orders', {
+    queryFn: () => axios.get(import.meta.env.VITE_API_URL + '/supplier/orders', {
       headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
     }).then(r => r.data),
     onSuccess: (data) => {
@@ -61,13 +61,13 @@ export default function SupplierDelivery() {
 
   const { data: feeMap = {} } = useQuery({
     queryKey: ['supplierFees'],
-    queryFn: () => axios.get('http://localhost:5000/api/supplier/fees', {
+    queryFn: () => axios.get(import.meta.env.VITE_API_URL + '/supplier/fees', {
       headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
     }).then(r => r.data)
   });
 
   const saveDelivery = useMutation({
-    mutationFn: ({ po_id, data }) => axios.post(`http://localhost:5000/api/supplier/delivery/${po_id}`, data, {
+    mutationFn: ({ po_id, data }) => axios.post(`${import.meta.env.VITE_API_URL}/supplier/delivery/${po_id}`, data, {
       headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
     }),
     onSuccess: (_, { po_id }) => {
@@ -78,7 +78,7 @@ export default function SupplierDelivery() {
   });
 
   const updateStatus = useMutation({
-    mutationFn: ({ id, status }) => axios.put(`http://localhost:5000/api/supplier/orders/${id}/status`, { status }, {
+    mutationFn: ({ id, status }) => axios.put(`${import.meta.env.VITE_API_URL}/supplier/orders/${id}/status`, { status }, {
       headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
     }),
     onSuccess: () => {

@@ -16,12 +16,12 @@ export default function CustomerShop() {
 
   const { data: products = [], isLoading: productsLoading } = useQuery({
     queryKey: ['customerProducts'],
-    queryFn: () => axios.get('http://localhost:5000/api/customer/products').then(r => r.data)
+    queryFn: () => axios.get(import.meta.env.VITE_API_URL + '/customer/products').then(r => r.data)
   });
 
   const { data: profile } = useQuery({
     queryKey: ['customerProfile'],
-    queryFn: () => axios.get('http://localhost:5000/api/customer/profile', {
+    queryFn: () => axios.get(import.meta.env.VITE_API_URL + '/customer/profile', {
       headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
     }).then(r => r.data),
   });
@@ -68,7 +68,7 @@ export default function CustomerShop() {
   const queryClient = useQueryClient();
 
   const placeOrder = useMutation({
-    mutationFn: () => axios.post('http://localhost:5000/api/customer/orders', {
+    mutationFn: () => axios.post(import.meta.env.VITE_API_URL + '/customer/orders', {
       items: cart.map(i => ({ product_id: i.product_id, quantity: i.quantity })),
       payment_method: paymentMethod
     }, {

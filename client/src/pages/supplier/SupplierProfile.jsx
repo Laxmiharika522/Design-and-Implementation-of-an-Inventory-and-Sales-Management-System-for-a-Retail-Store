@@ -27,7 +27,7 @@ export default function SupplierProfile() {
     queryKey: ['supplierProfile'],
     queryFn: () =>
       axios
-        .get('http://localhost:5000/api/supplier/profile', {
+        .get(import.meta.env.VITE_API_URL + '/supplier/profile', {
           headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
         })
         .then(r => r.data)
@@ -51,7 +51,7 @@ export default function SupplierProfile() {
 
   const updateProfile = useMutation({
     mutationFn: (data) => axios.put(
-      'http://localhost:5000/api/supplier/profile',
+      import.meta.env.VITE_API_URL + '/supplier/profile',
       data,
       { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
     ),
@@ -77,7 +77,7 @@ export default function SupplierProfile() {
   const addPhone = useMutation({
     mutationFn: (phone) =>
       axios.post(
-        'http://localhost:5000/api/supplier/profile/phone',
+        import.meta.env.VITE_API_URL + '/supplier/profile/phone',
         { phone },
         { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
       ),
@@ -98,7 +98,7 @@ export default function SupplierProfile() {
   const removePhone = useMutation({
     mutationFn: (phone) =>
       axios.delete(
-        `http://localhost:5000/api/supplier/profile/phone/${phone}`,
+        `${import.meta.env.VITE_API_URL}/supplier/profile/phone/${phone}`,
         { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
       ),
     onSuccess: async () => {

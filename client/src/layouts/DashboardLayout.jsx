@@ -31,7 +31,7 @@ export const DashboardLayout = () => {
 
   const { data: alertsData } = useQuery({
     queryKey: ['dashboard-alerts'],
-    queryFn: async () => (await axios.get('http://localhost:5000/api/reports/alerts')).data,
+    queryFn: async () => (await axios.get(import.meta.env.VITE_API_URL + '/reports/alerts')).data,
     refetchInterval: 60000 // refresh every minute
   });
 

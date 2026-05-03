@@ -28,7 +28,7 @@ export const SupplierLayout = () => {
     queryKey: ['supplierProfile'],
     queryFn: () =>
       axios
-        .get('http://localhost:5000/api/supplier/profile', {
+        .get(import.meta.env.VITE_API_URL + '/supplier/profile', {
           headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
         })
         .then(r => r.data),
