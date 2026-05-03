@@ -16,7 +16,7 @@ export const getAllProducts = async (req, res) => {
       ORDER BY p.product_name ASC
     `);
 
-    // Reconstruct Sequelize-like nested JSON response
+    // Map flat SQL JOIN rows into nested JSON objects
     const products = rows.map(row => ({
       product_id: row.product_id,
       product_name: row.product_name,
