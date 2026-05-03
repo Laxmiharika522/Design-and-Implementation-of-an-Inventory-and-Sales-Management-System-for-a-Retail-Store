@@ -168,7 +168,7 @@ export default function POS() {
   const paymentMethods = ['Cash', 'UPI', 'Credit Card', 'Debit Card'];
 
   return (
-    <div className="flex flex-col md:flex-row gap-6 h-[calc(100vh-8rem)]">
+    <div className="flex flex-row gap-2 md:gap-6 h-[calc(100vh-8rem)]">
       {/* Sidebar Receipt & Cart are below */}
 
       {/* Product Grid */}
@@ -207,7 +207,7 @@ export default function POS() {
            </div>
         </div>
         <div className="flex-1 overflow-y-auto p-4">
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 auto-rows-[14rem]">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 md:gap-4 auto-rows-[12rem] md:auto-rows-[14rem]">
            {filteredProducts?.map(product => (
               <button
                 key={product.product_id}
@@ -248,7 +248,7 @@ export default function POS() {
       </div>
 
       {/* Cart Sidebar */}
-      <div className="w-full md:w-96 flex flex-col card overflow-hidden">
+      <div className="w-[45%] sm:w-[300px] md:w-96 shrink-0 flex flex-col card overflow-hidden">
         <div className="p-4 border-b dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 flex items-center gap-3">
            <ShoppingCart className="text-blue-600" />
            <h2 className="text-lg font-bold">Current Order</h2>
