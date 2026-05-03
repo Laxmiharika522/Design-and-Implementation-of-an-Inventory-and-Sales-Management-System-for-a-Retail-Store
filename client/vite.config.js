@@ -12,10 +12,18 @@ export default defineConfig({
     chunkSizeWarningLimit: 1000, // Increase warning limit to 1000kB
     rollupOptions: {
       output: {
-        manualChunks: {
-          vendor: ['react', 'react-dom', 'react-router-dom', 'axios', '@tanstack/react-query'],
-          ui: ['lucide-react', 'framer-motion'],
-          charts: ['chart.js', 'react-chartjs-2']
+        manualChunks(id) {
+          if (id.includes('node_modules')) {
+            if (id.includes('react') || id.includes('react-dom') || id.includes('react-router-dom')) {
+              return 'vendor';
+            }
+            if (id.includes('lucide-react') || id.includes('framer-motion')) {
+              return 'ui';
+            }
+            if (id.includes('chart.js') || id.includes('react-chartjs-2')) {
+              return 'charts';
+            }
+          }
         }
       }
     }
