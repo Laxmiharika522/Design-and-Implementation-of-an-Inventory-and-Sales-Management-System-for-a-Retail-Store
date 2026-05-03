@@ -8,4 +8,16 @@ export default defineConfig({
     react(),
     tailwindcss(),
   ],
+  build: {
+    chunkSizeWarningLimit: 1000, // Increase warning limit to 1000kB
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          vendor: ['react', 'react-dom', 'react-router-dom', 'axios', '@tanstack/react-query'],
+          ui: ['lucide-react', 'framer-motion'],
+          charts: ['chart.js', 'react-chartjs-2']
+        }
+      }
+    }
+  }
 })
