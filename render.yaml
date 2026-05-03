@@ -28,7 +28,4 @@ services:
     staticPublishPath: dist
     envVars:
       - key: VITE_API_URL
-        fromService:
-          type: web
-          name: inventory-backend
-          envVarKey: RENDER_EXTERNAL_URL
+        sync: false # You will need to paste the backend's Render URL here
