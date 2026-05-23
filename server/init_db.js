@@ -24,7 +24,7 @@ async function initDB() {
       password: url.password,
       database: url.pathname.replace('/', ''),
       multipleStatements: true,
-      ssl: { rejectUnauthorized: false }
+      ssl: { rejectUnauthorized: true }
     };
   } else {
     connConfig = {
