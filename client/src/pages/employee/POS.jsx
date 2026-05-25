@@ -248,7 +248,18 @@ export default function POS() {
       </div>
 
       {/* Cart Sidebar */}
-      <div className="w-[45%] sm:w-[300px] md:w-96 shrink-0 flex flex-col card overflow-hidden">
+      // In tailwind.config.js:
+// module.exports = {
+//   theme: {
+//     extend: {
+//       width: {
+//         'sidebar-sm': '300px',
+//       }
+//     }
+//   }
+// }
+// In POS.jsx:
+<div className="w-[45%] sm:w-sidebar-sm md:w-96 shrink-0 flex flex-col card overflow-hidden">
         <div className="p-4 border-b dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 flex items-center gap-3">
            <ShoppingCart className="text-blue-600" />
            <h2 className="text-lg font-bold">Current Order</h2>
