@@ -14,7 +14,7 @@ export default defineConfig({
       output: {
         manualChunks(id) {
           if (id.includes('node_modules')) {
-            if (id.includes('react') || id.includes('react-dom') || id.includes('react-router-dom')) {
+            if (id.includes('react') || id.includes('react-dom') || id.includes('react-router-dom') || id.includes('axios') || id.includes('@tanstack/react-query')) {
               return 'vendor';
             }
             if (id.includes('lucide-react') || id.includes('framer-motion')) {
