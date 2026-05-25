@@ -9,7 +9,7 @@ export default defineConfig({
     tailwindcss(),
   ],
   build: {
-    chunkSizeWarningLimit: 1000, // Increase warning limit to 1000kB
+    chunkSizeWarningLimit: 1000, // Increased to 1000kB to accommodate large vendor/UI bundles. Monitor bundle sizes regularly.
     rollupOptions: {
       output: {
         manualChunks: {
