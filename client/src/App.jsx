@@ -19,8 +19,8 @@ import Reports from './pages/admin/Reports';
 import SalesTransaction from './pages/employee/SalesTransaction';
 import EmployeeProfile from './pages/employee/EmployeeProfile';
 import EmployeeDashboard from './pages/employee/EmployeeDashboard';
-import Warehouse from './pages/admin/Warehouse';
 import Categories from './pages/admin/Categories';
+import Suppliers from './pages/admin/Suppliers';
 
 // Supplier pages
 import SupplierDashboard from './pages/supplier/SupplierDashboard';
@@ -66,7 +66,7 @@ function App() {
             <Route path="/inventory" element={<ProtectedRoute roles={['Admin']}><Inventory /></ProtectedRoute>} />
             <Route path="/customers" element={<ProtectedRoute roles={['Admin', 'Cashier']}><Customers /></ProtectedRoute>} />
             <Route path="/employees" element={<ProtectedRoute roles={['Admin']}><Employees /></ProtectedRoute>} />
-            <Route path="/warehouse" element={<ProtectedRoute roles={['Admin']}><Warehouse /></ProtectedRoute>} />
+            <Route path="/suppliers" element={<ProtectedRoute roles={['Admin']}><Suppliers /></ProtectedRoute>} />
             <Route path="/reports" element={<ProtectedRoute roles={['Admin']}><Reports /></ProtectedRoute>} />
             <Route path="/admin/sales" element={<ProtectedRoute roles={['Admin', 'Cashier']}><SalesTransaction /></ProtectedRoute>} />
             <Route path="/admin/profile" element={<ProtectedRoute roles={['Admin', 'Cashier']}><EmployeeProfile /></ProtectedRoute>} />

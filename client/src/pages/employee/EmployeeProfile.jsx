@@ -69,13 +69,13 @@ export default function EmployeeProfile() {
     updateProfile.mutate(formData);
   };
 
-  if (isProfileLoading) return <div className="p-8 flex justify-center"><Loader2 className="animate-spin text-blue-500" /></div>;
+  if (isProfileLoading) return <div className="p-8 flex justify-center"><Loader2 className="animate-spin text-blue-600" /></div>;
 
   return (
     <div className="max-w-2xl mx-auto space-y-6 animate-in fade-in duration-500">
-      <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
-        <div className="p-6 border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50">
-          <h2 className="text-xl font-bold text-slate-800 dark:text-white flex items-center gap-2">
+      <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+        <div className="p-6 border-b border-slate-200 bg-slate-50">
+          <h2 className="text-xl font-bold text-slate-800 flex items-center gap-2">
             <User className="text-blue-600" /> My Profile
           </h2>
           <p className="text-sm text-slate-500 mt-1 font-medium">Update your personal information and account security.</p>
@@ -83,7 +83,7 @@ export default function EmployeeProfile() {
 
         <form onSubmit={handleSubmit} className="p-6 space-y-5">
           {success && (
-            <div className="bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400 p-4 rounded-xl flex items-center gap-3 border border-emerald-100 dark:border-emerald-800 animate-in slide-in-from-top duration-300">
+            <div className="bg-emerald-50 text-emerald-700 p-4 rounded-xl flex items-center gap-3 border border-emerald-100 animate-in slide-in-from-top duration-300">
               <CheckCircle2 size={20} className="text-emerald-500" />
               <p className="font-bold text-sm">Profile updated successfully!</p>
             </div>
@@ -102,7 +102,7 @@ export default function EmployeeProfile() {
                   value={formData.employee_name}
                   onChange={handleChange}
                   required
-                  className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl pl-10 pr-4 py-2.5 outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all font-medium"
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-10 pr-4 py-2.5 outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all font-medium"
                 />
               </div>
             </div>
@@ -118,7 +118,7 @@ export default function EmployeeProfile() {
                   name="phone_number"
                   value={formData.phone_number}
                   onChange={handleChange}
-                  className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl pl-10 pr-4 py-2.5 outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all font-medium"
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-10 pr-4 py-2.5 outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all font-medium"
                 />
               </div>
             </div>
@@ -135,7 +135,7 @@ export default function EmployeeProfile() {
                 name="email"
                 value={formData.email}
                 onChange={handleChange}
-                className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl pl-10 pr-4 py-2.5 outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all font-medium"
+                className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-10 pr-4 py-2.5 outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all font-medium"
               />
             </div>
           </div>
@@ -153,7 +153,7 @@ export default function EmployeeProfile() {
                   value={formData.pincode}
                   onChange={handleChange}
                   placeholder="Enter Pincode"
-                  className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl pl-10 pr-4 py-2.5 outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all font-medium"
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-10 pr-4 py-2.5 outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all font-medium"
                 />
               </div>
             </div>
@@ -168,7 +168,7 @@ export default function EmployeeProfile() {
                 value={formData.city}
                 onChange={handleChange}
                 placeholder="City"
-                className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-2.5 outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all font-medium"
+                className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all font-medium"
               />
             </div>
 
@@ -182,12 +182,12 @@ export default function EmployeeProfile() {
                 value={formData.state}
                 onChange={handleChange}
                 placeholder="State"
-                className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-2.5 outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all font-medium"
+                className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all font-medium"
               />
             </div>
           </div>
 
-          <div className="pt-4 border-t border-slate-100 dark:border-slate-800 space-y-1.5">
+          <div className="pt-4 border-t border-slate-100 space-y-1.5">
             <label className="block text-xs font-black uppercase tracking-widest text-slate-500 ml-1">
               Change Password
             </label>
@@ -199,7 +199,7 @@ export default function EmployeeProfile() {
                 placeholder="Leave blank to keep unchanged"
                 value={formData.password}
                 onChange={handleChange}
-                className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl pl-10 pr-4 py-2.5 outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all font-medium"
+                className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-10 pr-4 py-2.5 outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all font-medium"
               />
             </div>
           </div>
@@ -208,7 +208,7 @@ export default function EmployeeProfile() {
             <button 
               type="submit" 
               disabled={updateProfile.isPending}
-              className="w-full md:w-auto bg-blue-600 hover:bg-blue-700 text-white px-10 py-3.5 rounded-xl font-black flex items-center justify-center gap-2 transition-all hover:scale-[1.02] active:scale-95 shadow-lg shadow-blue-500/20 disabled:opacity-50 uppercase tracking-widest text-xs"
+              className="w-full md:w-auto bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-xl font-extrabold flex items-center justify-center gap-2 transition-all shadow-xs disabled:opacity-50 uppercase tracking-wider text-xs"
             >
               {updateProfile.isPending ? <Loader2 size={18} className="animate-spin" /> : <Save size={18} />}
               Save Changes
@@ -217,12 +217,12 @@ export default function EmployeeProfile() {
         </form>
       </div>
 
-      <div className="bg-slate-100 dark:bg-slate-800/50 p-6 rounded-2xl border-2 border-dashed border-slate-200 dark:border-slate-700 flex items-start gap-4">
-        <div className="w-10 h-10 bg-white dark:bg-slate-800 rounded-xl flex items-center justify-center shadow-sm shrink-0 border dark:border-slate-700">
-          <User size={20} className="text-blue-500" />
+      <div className="bg-slate-100 p-6 rounded-2xl border-2 border-dashed border-slate-200 flex items-start gap-4">
+        <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center shadow-xs shrink-0 border border-slate-200">
+          <User size={20} className="text-blue-600" />
         </div>
         <div>
-          <h4 className="font-bold text-slate-800 dark:text-white">Role & Access</h4>
+          <h4 className="font-bold text-slate-800">Role & Access</h4>
           <p className="text-xs text-slate-500 mt-1 font-medium leading-relaxed">
             Your account is registered as a <span className="font-black text-blue-600 uppercase tracking-tighter">{profile?.role}</span>. 
             Role-based permissions are managed by the Administrator and cannot be changed here.

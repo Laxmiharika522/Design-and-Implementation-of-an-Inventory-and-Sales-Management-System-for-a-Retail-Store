@@ -2,14 +2,19 @@ import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import axios from 'axios';
 import { UserPlus, Edit2, Shield, Trash2, X } from 'lucide-react';
+import { useAuth } from '../../context/AuthContext';
+import clsx from 'clsx';
 
 export default function Employees() {
+  const { user } = useAuth();
   const queryClient = useQueryClient();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingEmployee, setEditingEmployee] = useState(null);
   const [formData, setFormData] = useState({
     employee_name: '', email: '', password: '', phone_number: '', pincode: '', role: 'Cashier'
   });
+
+  const isAdmin = user?.role === 'Admin';
 
   const { data: employees, isLoading } = useQuery({
     queryKey: ['employees'],
@@ -42,7 +47,7 @@ export default function Employees() {
       setFormData({
         employee_name: emp.employee_name || '',
         email: emp.email || '',
-        password: '', // Don't show password
+        password: '',
         phone_number: emp.phone_number || '',
         pincode: emp.pincode || '',
         role: emp.role || 'Cashier'
@@ -72,51 +77,75 @@ export default function Employees() {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-indigo-600">Employee Directory</h2>
-        <button onClick={() => openModal()} className="btn btn-primary px-4 py-2 flex items-center gap-2">
+      <div className="flex justify-between items-center flex-wrap gap-4">
+        <div>
+          <h2 className="text-2xl font-black text-slate-900 tracking-tight">Employee Directory</h2>
+          <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mt-1">Manage store staff accounts & system roles</p>
+        </div>
+        <button 
+          onClick={() => openModal()} 
+          className={clsx(
+            "px-4 py-2.5 rounded-xl font-extrabold flex items-center gap-2 text-xs uppercase tracking-wider text-white shadow-xs transition-all",
+            isAdmin ? "bg-rose-600 hover:bg-rose-700" : "bg-blue-600 hover:bg-blue-700"
+          )}
+        >
           <UserPlus size={18} /> Add Employee
         </button>
       </div>
 
-      <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+      <div className="bg-white rounded-2xl border border-slate-200/90 shadow-xs overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-sm">
             <thead>
-              <tr className="bg-slate-50 border-b border-slate-200 text-slate-500">
-                <th className="px-6 py-4 font-semibold">Name</th>
-                <th className="px-6 py-4 font-semibold">Role</th>
-                <th className="px-6 py-4 font-semibold">Email</th>
-                <th className="px-6 py-4 font-semibold">Phone</th>
-                <th className="px-6 py-4 font-semibold">Pincode</th>
-                <th className="px-6 py-4 font-semibold text-right">Actions</th>
+              <tr className="bg-slate-50/80 border-b border-slate-200 text-slate-400 uppercase text-[11px] font-black tracking-wider">
+                <th className="px-6 py-4">Name</th>
+                <th className="px-6 py-4">Role</th>
+                <th className="px-6 py-4">Email</th>
+                <th className="px-6 py-4">Phone</th>
+                <th className="px-6 py-4">Sales Processed</th>
+                <th className="px-6 py-4 text-right">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-200">
+            <tbody className="divide-y divide-slate-200/80 font-medium">
               {isLoading ? (
-                <tr><td colSpan="6" className="px-6 py-8 text-center text-slate-500">Loading employees...</td></tr>
+                <tr><td colSpan="6" className="px-6 py-8 text-center text-slate-400">Loading employees...</td></tr>
               ) : employees?.map(emp => (
-                <tr key={emp.employee_id} className="hover:bg-slate-50 transition-colors">
-                  <td className="px-6 py-4 font-medium flex items-center gap-3 text-slate-800">
-                    <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-indigo-600 font-bold border border-slate-200">
-                       {(emp.employee_name || 'U').charAt(0)}
+                <tr key={emp.employee_id} className="hover:bg-slate-50/70 transition-colors">
+                  <td className="px-6 py-4 font-bold text-slate-900 flex items-center gap-3">
+                    <div className={clsx("w-8 h-8 rounded-full flex items-center justify-center font-black text-xs shrink-0", isAdmin ? "bg-rose-100 text-rose-700" : "bg-blue-100 text-blue-700")}>
+                      {emp.employee_name?.charAt(0)}
                     </div>
                     {emp.employee_name}
                   </td>
                   <td className="px-6 py-4">
-                     <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold ${
-                       emp.role === 'Admin' ? 'bg-indigo-100 text-indigo-700' : 'bg-slate-100 text-slate-700'
-                     }`}>
-                        <Shield size={12} /> {emp.role}
-                     </span>
+                    <span className={`px-2.5 py-1 rounded-md text-xs font-bold ${
+                      emp.role === 'Admin' 
+                        ? (isAdmin ? 'bg-rose-100 text-rose-700 border border-rose-200' : 'bg-indigo-100 text-indigo-700') 
+                        : 'bg-slate-100 text-slate-700 border border-slate-200'
+                    }`}>
+                      {emp.role}
+                    </span>
                   </td>
-                  <td className="px-6 py-4 text-slate-500">{emp.email}</td>
-                  <td className="px-6 py-4 text-slate-500">{emp.phone_number || 'N/A'}</td>
-                  <td className="px-6 py-4 text-slate-500">{emp.pincode || 'N/A'}</td>
+                  <td className="px-6 py-4 text-slate-600 text-xs font-semibold">{emp.email}</td>
+                  <td className="px-6 py-4 text-slate-600 text-xs font-mono">{emp.phone_number || 'N/A'}</td>
+                  <td className="px-6 py-4">
+                    <button
+                      onClick={() => navigate('/admin/sales', { state: { employeeId: emp.employee_id, employeeName: emp.employee_name } })}
+                      className={clsx(
+                        "px-2.5 py-1 rounded-lg text-xs font-extrabold border inline-flex items-center gap-1.5 transition-all shadow-2xs hover:scale-105 active:scale-95 cursor-pointer",
+                        isAdmin ? "bg-rose-50 hover:bg-rose-100 text-rose-800 border-rose-200" : "bg-blue-50 hover:bg-blue-100 text-blue-800 border-blue-200"
+                      )}
+                      title={`View sales transaction history for ${emp.employee_name}`}
+                    >
+                      <span>{emp.total_transactions || 0} sales</span>
+                      <span className="opacity-40">•</span>
+                      <span>₹{Number(emp.total_sales_value || 0).toFixed(2)}</span>
+                    </button>
+                  </td>
                   <td className="px-6 py-4 text-right">
                     <div className="flex items-center justify-end gap-2">
-                       <button onClick={() => openModal(emp)} className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"><Edit2 size={16} /></button>
-                       <button onClick={() => { if(confirm('Are you sure you want to delete this employee?')) deleteMutation.mutate(emp.employee_id) }} className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"><Trash2 size={16} /></button>
+                      <button onClick={() => openModal(emp)} className="p-2 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-lg transition-colors"><Edit2 size={16} /></button>
+                      <button onClick={() => { if(confirm('Delete employee account?')) deleteMutation.mutate(emp.employee_id) }} className="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors"><Trash2 size={16} /></button>
                     </div>
                   </td>
                 </tr>
@@ -129,66 +158,64 @@ export default function Employees() {
       {/* Modal */}
       {isModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" onClick={closeModal} />
-          <div className="relative bg-white rounded-2xl shadow-xl w-full max-w-lg overflow-hidden flex flex-col">
-            <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
-              <h3 className="text-lg font-bold text-slate-800">{editingEmployee ? `Update Role: ${editingEmployee.employee_name}` : 'Add New Employee'}</h3>
-              <button onClick={closeModal} className="p-2 text-slate-400 hover:bg-slate-50 rounded-lg"><X size={18} /></button>
+          <div className="absolute inset-0 bg-slate-900/50 backdrop-blur-xs" onClick={closeModal} />
+          <div className="relative bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden flex flex-col z-10 border border-slate-200">
+            <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/60">
+              <h3 className="text-base font-extrabold text-slate-900">{editingEmployee ? 'Edit Role' : 'Register New Employee'}</h3>
+              <button onClick={closeModal} className="p-2 text-slate-400 hover:bg-slate-200 rounded-lg"><X size={18} /></button>
             </div>
-            
+
             <form onSubmit={handleSave} className="p-6 space-y-4">
               {!editingEmployee ? (
                 <>
                   <div>
-                    <label className="block text-sm font-semibold text-slate-700 mb-1">Full Name</label>
-                    <input required type="text" className="w-full px-4 py-2 rounded-xl border border-slate-200 outline-none focus:ring-2 focus:ring-blue-500/20" value={formData.employee_name} onChange={e => setFormData({...formData, employee_name: e.target.value})} />
+                    <label className="block text-xs font-extrabold uppercase text-slate-700 mb-1">Full Name</label>
+                    <input required type="text" className="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm font-semibold" value={formData.employee_name} onChange={e => setFormData({...formData, employee_name: e.target.value})} />
                   </div>
-                  
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-semibold text-slate-700 mb-1">Email</label>
-                      <input required type="email" className="w-full px-4 py-2 rounded-xl border border-slate-200 outline-none focus:ring-2 focus:ring-blue-500/20" value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-semibold text-slate-700 mb-1">Role</label>
-                      <select className="w-full px-4 py-2 rounded-xl border border-slate-200 outline-none focus:ring-2 focus:ring-blue-500/20 bg-white" value={formData.role} onChange={e => setFormData({...formData, role: e.target.value})}>
-                        <option value="Cashier">Cashier</option>
-                        <option value="Admin">Admin</option>
-                      </select>
-                    </div>
-                  </div>
-
                   <div>
-                    <label className="block text-sm font-semibold text-slate-700 mb-1">Password</label>
-                    <input required type="password" className="w-full px-4 py-2 rounded-xl border border-slate-200 outline-none focus:ring-2 focus:ring-blue-500/20" value={formData.password} onChange={e => setFormData({...formData, password: e.target.value})} />
+                    <label className="block text-xs font-extrabold uppercase text-slate-700 mb-1">Email Address</label>
+                    <input required type="email" className="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm font-semibold" value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} />
                   </div>
-
-                  <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs font-extrabold uppercase text-slate-700 mb-1">Password</label>
+                    <input required type="password" className="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm" value={formData.password} onChange={e => setFormData({...formData, password: e.target.value})} />
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <label className="block text-sm font-semibold text-slate-700 mb-1">Phone Number</label>
-                      <input type="tel" className="w-full px-4 py-2 rounded-xl border border-slate-200 outline-none focus:ring-2 focus:ring-blue-500/20" value={formData.phone_number} onChange={e => setFormData({...formData, phone_number: e.target.value})} />
+                      <label className="block text-xs font-extrabold uppercase text-slate-700 mb-1">Phone</label>
+                      <input required type="text" className="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm font-mono" value={formData.phone_number} onChange={e => setFormData({...formData, phone_number: e.target.value})} />
                     </div>
                     <div>
-                      <label className="block text-sm font-semibold text-slate-700 mb-1">Pincode</label>
-                      <input type="text" className="w-full px-4 py-2 rounded-xl border border-slate-200 outline-none focus:ring-2 focus:ring-blue-500/20" value={formData.pincode} onChange={e => setFormData({...formData, pincode: e.target.value})} />
+                      <label className="block text-xs font-extrabold uppercase text-slate-700 mb-1">Pincode (Optional)</label>
+                      <input type="text" className="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm font-mono" value={formData.pincode} onChange={e => setFormData({...formData, pincode: e.target.value})} />
                     </div>
                   </div>
                 </>
-              ) : (
-                <div className="bg-blue-50 p-6 rounded-2xl border border-blue-100">
-                  <label className="block text-sm font-bold text-blue-800 mb-3 uppercase tracking-wider">Assign New Role</label>
-                  <select className="w-full px-4 py-3 rounded-xl border-2 border-blue-200 outline-none focus:ring-4 focus:ring-blue-500/10 bg-white font-semibold text-blue-900 shadow-sm" value={formData.role} onChange={e => setFormData({...formData, role: e.target.value})}>
-                    <option value="Cashier">Cashier</option>
-                    <option value="Admin">Admin</option>
-                  </select>
-                  <p className="mt-3 text-xs text-blue-600 font-medium">Changing the role will instantly update this employee's access level within the system.</p>
-                </div>
-              )}
+              ) : null}
 
-              <div className="pt-4 flex items-center justify-end gap-3">
-                <button type="button" onClick={closeModal} className="px-5 py-2 rounded-xl font-semibold text-slate-600 hover:bg-slate-100 transition-colors">Cancel</button>
-                <button type="submit" disabled={saveMutation.isPending} className="px-5 py-2 rounded-xl font-semibold bg-blue-600 hover:bg-blue-700 text-white transition-colors">
-                  {saveMutation.isPending ? 'Saving...' : (editingEmployee ? 'Update Role' : 'Save Employee')}
+              <div>
+                <label className="block text-xs font-extrabold uppercase text-slate-700 mb-1">System Role</label>
+                <select 
+                  value={formData.role} 
+                  onChange={e => setFormData({...formData, role: e.target.value})}
+                  className="w-full px-3 py-2.5 rounded-xl border border-slate-200 text-sm font-extrabold bg-white"
+                >
+                  <option value="Cashier">Cashier</option>
+                  <option value="Admin">Admin</option>
+                </select>
+              </div>
+
+              <div className="pt-4 flex items-center justify-end gap-3 border-t border-slate-100">
+                <button type="button" onClick={closeModal} className="px-4 py-2 rounded-xl font-bold text-xs uppercase text-slate-600 hover:bg-slate-100">Cancel</button>
+                <button 
+                  type="submit" 
+                  disabled={saveMutation.isPending} 
+                  className={clsx(
+                    "px-5 py-2.5 rounded-xl font-extrabold text-xs uppercase text-white shadow-xs",
+                    isAdmin ? "bg-rose-600 hover:bg-rose-700" : "bg-blue-600 hover:bg-blue-700"
+                  )}
+                >
+                  {saveMutation.isPending ? 'Saving...' : 'Save Employee'}
                 </button>
               </div>
             </form>

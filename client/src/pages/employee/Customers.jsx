@@ -1,13 +1,16 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
-import { Users, Plus, Receipt, Trash2 } from 'lucide-react';
+import { Users, Receipt, Trash2 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
+import clsx from 'clsx';
 
 export default function Customers() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const queryClient = useQueryClient();
+
+  const isAdmin = user?.role === 'Admin';
 
   const { data: customers, isLoading } = useQuery({
     queryKey: ['customers'],
@@ -35,48 +38,52 @@ export default function Customers() {
     }
   };
 
-  const isAdmin = user?.role === 'Admin';
-
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-indigo-600">Customers CRM</h2>
+        <div>
+          <h2 className="text-2xl font-black text-slate-900 tracking-tight">Customers CRM</h2>
+          <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mt-1">Registered customer directory & transaction metrics</p>
+        </div>
       </div>
 
-      <div className="table-container">
+      <div className="bg-white rounded-2xl border border-slate-200/90 shadow-xs overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full text-left text-sm">
+          <table className="w-full text-left text-sm border-collapse">
             <thead>
-              <tr>
-                <th className="th-base">Name</th>
-                <th className="th-base">Email</th>
-                <th className="th-base">Phone</th>
-                <th className="th-base">Total Spent</th>
-                <th className="th-base text-right">Actions</th>
+              <tr className="bg-slate-50/80 border-b border-slate-200 text-slate-400 uppercase text-[11px] font-black tracking-wider">
+                <th className="px-6 py-4">Name</th>
+                <th className="px-6 py-4">Email</th>
+                <th className="px-6 py-4">Phone</th>
+                <th className="px-6 py-4">Total Spent</th>
+                <th className="px-6 py-4 text-right">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y dark:divide-slate-700">
+            <tbody className="divide-y divide-slate-200/80 font-medium">
               {isLoading ? (
-                <tr><td colSpan="5" className="td-base text-center text-slate-500">Loading customers...</td></tr>
+                <tr><td colSpan="5" className="px-6 py-12 text-center text-slate-400">Loading customers...</td></tr>
               ) : customers?.map(customer => (
-                <tr key={customer.customer_id} className="tr-base">
-                  <td className="td-base font-medium flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-700 flex items-center justify-center text-blue-600 font-bold">
+                <tr key={customer.customer_id} className="hover:bg-slate-50/70 transition-colors">
+                  <td className="px-6 py-4 font-bold text-slate-900 flex items-center gap-3">
+                    <div className={clsx("w-8 h-8 rounded-full flex items-center justify-center font-black text-xs shrink-0", isAdmin ? "bg-rose-100 text-rose-700" : "bg-blue-100 text-blue-700")}>
                        {customer.customer_name.charAt(0)}
                     </div>
                     {customer.customer_name}
                   </td>
-                  <td className="td-base">{customer.email || 'N/A'}</td>
-                  <td className="td-base">{customer.phone}</td>
-                  <td className="td-base font-bold text-slate-900 dark:text-white">
+                  <td className="px-6 py-4 text-slate-600 text-xs font-semibold">{customer.email || 'N/A'}</td>
+                  <td className="px-6 py-4 text-slate-600 text-xs font-mono">{customer.phone}</td>
+                  <td className="px-6 py-4 font-black text-slate-900">
                     ₹{Number(customer.total_spent || 0).toFixed(2)}
                   </td>
 
-                  <td className="td-base text-right">
+                  <td className="px-6 py-4 text-right">
                     <div className="flex items-center justify-end gap-2">
                       <button 
                         onClick={() => navigate('/admin/sales', { state: { customerId: customer.customer_id } })}
-                        className="p-2 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/30 transition-colors rounded-lg flex items-center gap-2 font-bold text-xs uppercase tracking-wider"
+                        className={clsx(
+                          "p-2 transition-colors rounded-lg flex items-center gap-1.5 font-extrabold text-xs uppercase tracking-wider",
+                          isAdmin ? "text-rose-600 hover:bg-rose-50" : "text-blue-600 hover:bg-blue-50"
+                        )}
                       >
                         <Receipt size={14} /> Invoices
                       </button>
@@ -85,7 +92,7 @@ export default function Customers() {
                         <button 
                           onClick={() => handleDelete(customer.customer_id)}
                           disabled={deleteMutation.isPending}
-                          className="p-2 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/30 transition-colors rounded-lg flex items-center gap-2 font-bold text-xs uppercase tracking-wider"
+                          className="p-2 text-rose-600 hover:bg-rose-50 transition-colors rounded-lg flex items-center gap-1.5 font-extrabold text-xs uppercase tracking-wider"
                           title="Delete Customer"
                         >
                           <Trash2 size={14} /> Delete
@@ -95,6 +102,9 @@ export default function Customers() {
                   </td>
                 </tr>
               ))}
+              {!isLoading && customers?.length === 0 && (
+                <tr><td colSpan="5" className="px-6 py-12 text-center text-slate-400 font-medium">No registered customers found.</td></tr>
+              )}
             </tbody>
           </table>
         </div>

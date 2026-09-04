@@ -6,6 +6,9 @@ import pool from '../config/db.js';
 const router = express.Router();
 router.use(verifyToken, authorizeUserType('supplier'));
 
+// Auto-ensure agent_contact column exists on start
+pool.query('ALTER TABLE delivery_details ADD COLUMN agent_contact VARCHAR(50) DEFAULT NULL').catch(() => {});
+
 // ═══════════════════════════════════
 // ORDERS
 // ═══════════════════════════════════
@@ -15,11 +18,10 @@ router.get('/orders', async (req, res) => {
     const [rows] = await pool.query(`
       SELECT 
         po.*,
-        pod.product_id, pod.quantity_ordered, pod.batch_no,
-        p.product_name, p.unit_price,
-        p.product_name,
+        pod.product_id, pod.quantity_ordered, pod.batch_no, pod.unit_price AS pod_unit_price,
+        p.product_name, p.unit_price AS catalog_mrp,
         c.category_name,
-        dd.shipping_mode, dd.purchase_agent_name
+        dd.shipping_mode, dd.purchase_agent_name, dd.agent_contact
       FROM purchase_order po
       LEFT JOIN purchase_order_detail pod ON po.po_id = pod.po_id
       LEFT JOIN product p ON pod.product_id = p.product_id
@@ -32,32 +34,52 @@ router.get('/orders', async (req, res) => {
     const orderMap = new Map();
     for (const row of rows) {
       if (!orderMap.has(row.po_id)) {
+        const totalAmt = parseFloat(row.total_amount || 0);
+        const amtPaid = parseFloat(row.amount_paid || 0);
+        let payStatus = row.payment_status;
+        if (!payStatus) {
+          if (amtPaid >= totalAmt && totalAmt > 0) payStatus = 'Paid';
+          else if (amtPaid > 0) payStatus = 'Partial';
+          else payStatus = 'Pending';
+        }
+
         orderMap.set(row.po_id, {
           po_id: row.po_id,
           supplier_id: row.supplier_id,
-          status: row.status,
-          total_amount: row.total_amount,
+          status: row.status || 'Pending',
+          total_amount: totalAmt,
+          payment_status: payStatus,
+          amount_paid: amtPaid,
+          pending_balance: Math.max(0, totalAmt - amtPaid),
+          payment_method: row.payment_method || 'Cash',
+          notes: row.notes || '',
           createdAt: row.order_date,
           updatedAt: row.delivery_date || row.order_date,
           order_date: row.order_date,
           delivery_date: row.delivery_date,
           PurchaseOrderDetails: [],
-          DeliveryDetail: row.shipping_mode ? {
+          DeliveryDetail: (row.shipping_mode || row.purchase_agent_name || row.agent_contact) ? {
             shipping_mode: row.shipping_mode,
-            purchase_agent_name: row.purchase_agent_name
+            purchase_agent_name: row.purchase_agent_name,
+            agent_contact: row.agent_contact
           } : null
         });
       }
       if (row.product_id) {
+        const mrp = parseFloat(row.catalog_mrp || 0);
+        const effectivePrice = parseFloat(row.pod_unit_price !== null && row.pod_unit_price !== undefined ? row.pod_unit_price : mrp);
+        const qty = parseInt(row.quantity_ordered || 0);
+
         orderMap.get(row.po_id).PurchaseOrderDetails.push({
           product_id: row.product_id,
-          quantity_ordered: row.quantity_ordered,
+          quantity_ordered: qty,
           batch_no: row.batch_no,
-          unit_price: row.unit_price,
-          line_total: (row.quantity_ordered || 0) * (row.unit_price || 0),
+          unit_price: effectivePrice,
+          mrp: mrp,
+          line_total: qty * effectivePrice,
           Product: {
             product_name: row.product_name,
-            unit_price: row.unit_price,
+            unit_price: mrp,
             Category: { category_name: row.category_name }
           }
         });
@@ -85,33 +107,18 @@ router.get('/stats', async (req, res) => {
       WHERE supplier_id = ?
     `, [sid]);
 
-    const [deliveredOrders] = await pool.query(`
-      SELECT po.po_id, pod.quantity_ordered, p.unit_price, c.category_name
-      FROM purchase_order po
-      JOIN purchase_order_detail pod ON po.po_id = pod.po_id
-      JOIN product p ON pod.product_id = p.product_id
-      JOIN category c ON p.category_id = c.category_id
-      WHERE po.supplier_id = ? AND po.status = 'Delivered'
+    const [earnedRows] = await pool.query(`
+      SELECT 
+        COALESCE(SUM(total_amount), 0) as totalEarned,
+        COALESCE(SUM(amount_paid), 0) as totalPaid
+      FROM purchase_order
+      WHERE supplier_id = ? AND status != 'Cancelled'
     `, [sid]);
-
-    const totalEarned = deliveredOrders.reduce((sum, d) => {
-      const qty = d.quantity_ordered || 0;
-      const unitPrice = parseFloat(d.unit_price || 0);
-      const baseTotal = unitPrice * qty;
-      const catName = d.category_name || '';
-
-      let gstRate = 0.05;
-      if (['Fruits & Vegetables'].includes(catName)) gstRate = 0.00;
-      else if (['Dairy Products', 'Bakery & Bread', 'Grocery & Staples'].includes(catName)) gstRate = 0.05;
-      else if (['Beverages', 'Snacks & Packaged Foods'].includes(catName)) gstRate = 0.12;
-      else if (['Personal Care', 'Household & Cleaning', 'Health & Wellness', 'Baby & Kids Products'].includes(catName)) gstRate = 0.18;
-
-      return sum + (baseTotal + (baseTotal * gstRate));
-    }, 0);
 
     res.json({
       ...counts[0],
-      totalEarned: Number.parseFloat(totalEarned.toFixed(2))
+      totalEarned: parseFloat(earnedRows[0]?.totalEarned || 0),
+      totalPaid: parseFloat(earnedRows[0]?.totalPaid || 0)
     });
   } catch (error) {
     res.status(500).json({ message: 'Error fetching stats' });
@@ -142,7 +149,15 @@ router.put('/orders/:id/status', async (req, res) => {
     }
 
     if (status === 'Delivered' && oldStatus !== 'Delivered') {
-      // No extra stock logic required here currently.
+      const [details] = await connection.query('SELECT * FROM purchase_order_detail WHERE po_id = ?', [poId]);
+      for (const item of details) {
+        const qty = parseInt(item.quantity_ordered || 0);
+        await connection.query(`
+          UPDATE inventory 
+          SET current_stock = current_stock + ?, stock_in = IFNULL(stock_in, 0) + ?
+          WHERE product_id = ?
+        `, [qty, qty, item.product_id]);
+      }
     }
 
     await connection.commit();
@@ -157,8 +172,6 @@ router.put('/orders/:id/status', async (req, res) => {
 
 // DELIVERIES
 router.get('/delivery', async (req, res) => {
-   // Implementation similar to /orders but could filter for delivery relevant info
-   // For now, mirroring previous logic
    try {
     const [rows] = await pool.query(`
       SELECT 
@@ -166,7 +179,7 @@ router.get('/delivery', async (req, res) => {
         pod.product_id, pod.quantity_ordered, pod.batch_no,
         p.product_name, p.unit_price,
         c.category_name,
-        dd.shipping_mode, dd.purchase_agent_name
+        dd.shipping_mode, dd.purchase_agent_name, dd.agent_contact
       FROM purchase_order po
       LEFT JOIN purchase_order_detail pod ON po.po_id = pod.po_id
       LEFT JOIN product p ON pod.product_id = p.product_id
@@ -182,9 +195,10 @@ router.get('/delivery', async (req, res) => {
         orderMap.set(row.po_id, {
           ...row,
           PurchaseOrderDetails: [],
-          DeliveryDetail: row.shipping_mode ? {
+          DeliveryDetail: (row.shipping_mode || row.purchase_agent_name || row.agent_contact) ? {
             shipping_mode: row.shipping_mode,
-            purchase_agent_name: row.purchase_agent_name
+            purchase_agent_name: row.purchase_agent_name,
+            agent_contact: row.agent_contact
           } : null
         });
       }
@@ -211,24 +225,35 @@ router.get('/delivery', async (req, res) => {
 
 router.post('/delivery/:po_id', async (req, res) => {
   try {
-    const { shipping_mode, purchase_agent_name, delivery_date } = req.body;
+    const { shipping_mode, purchase_agent_name, agent_contact, delivery_date } = req.body;
     const po_id = req.params.po_id;
     const sid = req.user.id;
 
     const [orderRows] = await pool.query('SELECT * FROM purchase_order WHERE po_id = ? AND supplier_id = ?', [po_id, sid]);
     if (orderRows.length === 0) return res.status(404).json({ message: 'Order not found' });
 
-    await pool.query(`
-      INSERT INTO delivery_details (po_id, shipping_mode, purchase_agent_name)
-      VALUES (?, ?, ?)
-      ON DUPLICATE KEY UPDATE shipping_mode = VALUES(shipping_mode), purchase_agent_name = VALUES(purchase_agent_name)
-    `, [po_id, shipping_mode, purchase_agent_name]);
+    // Update purchase_order status to 'Shipped' if it's currently Pending
+    await pool.query('UPDATE purchase_order SET status = "Shipped" WHERE po_id = ? AND status = "Pending"', [po_id]);
+
+    try {
+      await pool.query(`
+        INSERT INTO delivery_details (po_id, shipping_mode, purchase_agent_name, agent_contact)
+        VALUES (?, ?, ?, ?)
+        ON DUPLICATE KEY UPDATE shipping_mode = VALUES(shipping_mode), purchase_agent_name = VALUES(purchase_agent_name), agent_contact = VALUES(agent_contact)
+      `, [po_id, shipping_mode || null, purchase_agent_name || null, agent_contact || null]);
+    } catch (colErr) {
+      await pool.query(`
+        INSERT INTO delivery_details (po_id, shipping_mode, purchase_agent_name)
+        VALUES (?, ?, ?)
+        ON DUPLICATE KEY UPDATE shipping_mode = VALUES(shipping_mode), purchase_agent_name = VALUES(purchase_agent_name)
+      `, [po_id, shipping_mode || null, purchase_agent_name || null]);
+    }
 
     if (delivery_date) {
       await pool.query('UPDATE purchase_order SET delivery_date = ? WHERE po_id = ?', [delivery_date, po_id]);
     }
 
-    res.json({ message: 'Delivery info saved' });
+    res.json({ message: 'Delivery details saved successfully' });
   } catch (error) {
     res.status(500).json({ message: 'Error saving delivery info', error: error.message });
   }
@@ -269,32 +294,49 @@ router.get('/payments', async (req, res) => {
     const [rows] = await pool.query(`
       SELECT 
         po.po_id, po.order_date, po.total_amount, po.status, po.delivery_date,
-        pod.quantity_ordered, p.unit_price, p.product_name, c.category_name
+        po.payment_status, po.amount_paid, po.payment_method, po.notes,
+        pod.quantity_ordered, pod.unit_price AS pod_unit_price, p.unit_price AS catalog_mrp, p.product_name, c.category_name
       FROM purchase_order po
       LEFT JOIN purchase_order_detail pod ON po.po_id = pod.po_id
       LEFT JOIN product p ON pod.product_id = p.product_id
       LEFT JOIN category c ON p.category_id = c.category_id
       WHERE po.supplier_id = ?
-      ORDER BY po.order_date DESC
+      ORDER BY po.order_date DESC, po.po_id DESC
     `, [sid]);
 
     const paymentMap = new Map();
     for (const row of rows) {
       if (!paymentMap.has(row.po_id)) {
+        const totalAmt = parseFloat(row.total_amount || 0);
+        const amtPaid = parseFloat(row.amount_paid || 0);
+        let payStatus = row.payment_status;
+        if (!payStatus) {
+          if (amtPaid >= totalAmt && totalAmt > 0) payStatus = 'Paid';
+          else if (amtPaid > 0) payStatus = 'Partial';
+          else payStatus = 'Pending';
+        }
+
         paymentMap.set(row.po_id, {
           po_id: row.po_id,
           order_date: row.order_date,
-          total_amount: row.total_amount,
+          total_amount: totalAmt,
+          amount_paid: amtPaid,
+          pending_balance: Math.max(0, totalAmt - amtPaid),
           status: row.status,
           delivery_date: row.delivery_date,
-          payment_status: ['Delivered', 'Received', 'Completed'].includes(row.status) ? 'Paid' : 'Pending',
+          payment_status: payStatus,
+          payment_method: row.payment_method || 'Cash',
+          notes: row.notes || '',
           PurchaseOrderDetails: []
         });
       }
       if (row.product_name) {
+        const mrp = parseFloat(row.catalog_mrp || 0);
+        const effectivePrice = parseFloat(row.pod_unit_price !== null && row.pod_unit_price !== undefined ? row.pod_unit_price : mrp);
         paymentMap.get(row.po_id).PurchaseOrderDetails.push({
           Product: {
-            unit_price: row.unit_price,
+            unit_price: effectivePrice,
+            mrp: mrp,
             product_name: row.product_name,
             Category: { category_name: row.category_name }
           },
@@ -304,7 +346,7 @@ router.get('/payments', async (req, res) => {
     }
     res.json(Array.from(paymentMap.values()));
   } catch (error) {
-    res.status(500).json({ message: 'Error' });
+    res.status(500).json({ message: 'Error fetching payments', error: error.message });
   }
 });
 

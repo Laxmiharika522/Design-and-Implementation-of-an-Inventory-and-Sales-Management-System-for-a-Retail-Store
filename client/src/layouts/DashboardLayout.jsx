@@ -7,7 +7,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { 
   LogOut, LayoutDashboard, Package, Users, ShoppingCart, 
   Activity, FileText, Settings, UserSquare2, 
-  Menu, Bell, ChevronLeft, ChevronRight, User, Warehouse as WarehouseIcon, Tag
+  Menu, Bell, ChevronLeft, ChevronRight, User, Truck, Tag
 } from 'lucide-react';
 import clsx from 'clsx';
 
@@ -47,7 +47,7 @@ export const DashboardLayout = () => {
     { name: 'Inventory', path: '/inventory', icon: Activity, roles: ['Admin'] },
     { name: 'Customers', path: '/customers', icon: Users, roles: ['Admin', 'Cashier'] },
     { name: 'Employees', path: '/employees', icon: UserSquare2, roles: ['Admin'] },
-    { name: 'Warehouses', path: '/warehouse', icon: WarehouseIcon, roles: ['Admin'] },
+    { name: 'Suppliers & Orders', path: '/suppliers', icon: Truck, roles: ['Admin'] },
     { name: 'Reports', path: '/reports', icon: FileText, roles: ['Admin'] },
     { name: 'Sales Transactions', path: '/admin/sales', icon: FileText, roles: ['Admin', 'Cashier'] },
   ];
@@ -57,15 +57,17 @@ export const DashboardLayout = () => {
     document.documentElement.classList.toggle('dark');
   };
 
-  // Ensure dark mode is active on mount
+  // Ensure light mode is active on mount
   useState(() => {
-    document.documentElement.classList.add('dark');
+    document.documentElement.classList.remove('dark');
   });
+
+  const isAdmin = user?.role === 'Admin';
 
   const currentRouteName = navItems.find(i => i.path === location.pathname)?.name || 'Application';
 
   return (
-    <div className="min-h-screen flex bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-slate-50 font-sans transition-colors duration-300">
+    <div className="min-h-screen flex bg-slate-50 text-slate-900 font-sans transition-colors duration-300">
       
       {/* Mobile Overlay */}
       <AnimatePresence>
@@ -83,25 +85,25 @@ export const DashboardLayout = () => {
       {/* Collapsible Sidebar */}
       <motion.aside 
         initial={false}
-        animate={{ width: isSidebarOpen ? 300 : 88 }}
+        animate={{ width: isSidebarOpen ? 280 : 72 }}
         className={clsx(
-          "flex flex-col bg-white dark:bg-slate-900 border-r border-slate-200/60 dark:border-slate-800/60 shadow-xl pt-4 z-50",
-          "fixed inset-y-0 left-0 h-full transform transition-transform duration-300 ease-in-out md:relative md:translate-x-0",
+          "flex flex-col bg-white border-r border-slate-200/90 shadow-sm pt-4 z-50 overflow-hidden shrink-0",
+          "fixed inset-y-0 left-0 h-screen transform transition-transform duration-300 ease-in-out md:sticky md:top-0 md:h-screen md:translate-x-0",
           isMobileSidebarOpen ? "translate-x-0" : "-translate-x-full"
         )}
       >
-        <div className="flex items-center justify-between p-4 mb-2">
+        <div className="flex items-center justify-between px-4 py-2 mb-2">
           <AnimatePresence mode="wait">
             {isSidebarOpen ? (
               <motion.div 
                 initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-                className="flex items-center gap-2 overflow-hidden"
+                className="flex items-center gap-2.5 overflow-hidden"
               >
-                <div className="w-8 h-8 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-lg flex items-center justify-center shadow-lg shadow-blue-500/20 shrink-0">
-                  <span className="text-white font-bold text-lg leading-none">I</span>
+                <div className={clsx("w-8 h-8 rounded-xl flex items-center justify-center shadow-xs text-white shrink-0 font-extrabold text-base", isAdmin ? "bg-rose-600" : "bg-blue-600")}>
+                  I
                 </div>
-                <h1 className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-indigo-600 tracking-tight whitespace-nowrap">
-                  InventoryPro
+                <h1 className="text-lg font-extrabold text-slate-900 tracking-tight whitespace-nowrap">
+                  Inventory<span className={isAdmin ? "text-rose-600" : "text-blue-600"}>Pro</span>
                 </h1>
               </motion.div>
             ) : (
@@ -109,15 +111,15 @@ export const DashboardLayout = () => {
                 initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
                 className="w-full flex justify-center"
               >
-                <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/20">
-                  <span className="text-white font-bold text-xl leading-none">I</span>
+                <div className={clsx("w-9 h-9 rounded-xl flex items-center justify-center shadow-xs text-white font-extrabold text-lg", isAdmin ? "bg-rose-600" : "bg-blue-600")}>
+                  I
                 </div>
               </motion.div>
             )}
           </AnimatePresence>
         </div>
 
-        <nav className="flex-1 px-5 space-y-2 overflow-y-auto mt-6 overflow-x-hidden">
+        <nav className="flex-1 px-3 space-y-1.5 overflow-y-auto mt-4 overflow-x-hidden">
           {navItems.filter(item => item.roles.includes(user?.role)).map((item) => {
             const Icon = item.icon;
             const isActive = location.pathname === item.path;
@@ -125,27 +127,24 @@ export const DashboardLayout = () => {
               <Link
                 key={item.name}
                 to={item.path}
-                className={clsx(
-                  "flex items-center gap-3 px-3 py-2.5 border border-transparent rounded-xl transition-all duration-200 group relative",
-                  isActive 
-                    ? "bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 font-semibold" 
-                    : "hover:bg-slate-100 hover:border-slate-200 dark:hover:bg-slate-800/50 dark:hover:border-slate-700/50 text-slate-600 dark:text-slate-400"
-                )}
                 title={!isSidebarOpen ? item.name : undefined}
+                className={clsx(
+                  "flex items-center gap-3 px-3.5 py-2.5 rounded-xl transition-all duration-200 group relative text-sm",
+                  isActive
+                    ? (isAdmin ? "bg-rose-50 text-rose-950 font-extrabold border border-rose-200/90 shadow-xs" : "bg-blue-50 text-blue-900 font-extrabold border border-blue-200/90 shadow-xs")
+                    : (isAdmin ? "hover:bg-rose-50/50 hover:text-rose-700 text-slate-700 font-medium" : "hover:bg-blue-50/50 hover:text-blue-700 text-slate-700 font-medium")
+                )}
               >
                 {isActive && (
-                  <motion.div layoutId="sidebar-active" className="absolute left-0 top-1/2 -translate-y-1/2 w-1.5 h-1/2 bg-blue-600 rounded-r-full" />
+                  <motion.div 
+                    layoutId="emp-active" 
+                    className={clsx("absolute left-0 top-1/2 -translate-y-1/2 w-1.5 h-1/2 rounded-r-full", isAdmin ? "bg-rose-600" : "bg-blue-600")} 
+                  />
                 )}
-                <Icon size={20} className={clsx("shrink-0", isActive ? "text-blue-600" : "text-slate-500 group-hover:text-blue-500")} />
-                
+                <Icon size={18} className={clsx("shrink-0", isActive ? (isAdmin ? "text-rose-600" : "text-blue-600") : (isAdmin ? "text-slate-400 group-hover:text-rose-600" : "text-slate-400 group-hover:text-blue-600"))} />
                 <AnimatePresence>
                   {isSidebarOpen && (
-                    <motion.span 
-                      initial={{ opacity: 0, x: -10 }} 
-                      animate={{ opacity: 1, x: 0 }} 
-                      exit={{ opacity: 0, x: -10 }}
-                      className="whitespace-nowrap"
-                    >
+                    <motion.span initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -8 }} className="whitespace-nowrap font-bold">
                       {item.name}
                     </motion.span>
                   )}
@@ -155,12 +154,36 @@ export const DashboardLayout = () => {
           })}
         </nav>
 
-        <div className="p-4 mt-auto hidden md:block">
+        <div className="p-3 space-y-2 mt-auto hidden md:block border-t border-slate-200/80">
+          <button 
+            onClick={logout} 
+            className={clsx(
+              "w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-red-600 hover:bg-red-50 hover:text-red-700 font-bold transition-all border border-red-200 text-sm shadow-xs", 
+              !isSidebarOpen && "justify-center"
+            )}
+            title={!isSidebarOpen ? "Sign Out" : undefined}
+          >
+            <LogOut size={18} className="shrink-0" />
+            {isSidebarOpen && <span>Sign Out</span>}
+          </button>
+
           <button 
              onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-             className="w-full p-2 flex items-center justify-center rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-500 transition-colors"
+             className="w-full p-2 flex items-center justify-center rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 transition-colors"
+             title={isSidebarOpen ? "Collapse sidebar" : "Expand sidebar"}
           >
-            {isSidebarOpen ? <ChevronLeft size={20} /> : <ChevronRight size={20} />}
+            {isSidebarOpen ? <ChevronLeft size={18} /> : <ChevronRight size={18} />}
+          </button>
+        </div>
+
+        {/* Mobile Bottom Footer */}
+        <div className="p-3 space-y-2 mt-auto md:hidden border-t border-slate-200">
+          <button 
+            onClick={logout} 
+            className="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-red-600 hover:bg-red-50 font-bold text-sm border border-red-200"
+          >
+            <LogOut size={18} className="shrink-0" />
+            <span>Sign Out</span>
           </button>
         </div>
       </motion.aside>
@@ -187,7 +210,7 @@ export const DashboardLayout = () => {
                 onClick={() => setShowProfileMenu(!showProfileMenu)}
                 className="flex items-center gap-3 p-1 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
               >
-                <div className="w-9 h-9 rounded-full bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 flex items-center justify-center font-bold relative overflow-hidden ring-2 ring-white dark:ring-slate-900">
+                <div className={clsx("w-9 h-9 rounded-full flex items-center justify-center font-bold relative overflow-hidden ring-2 ring-white dark:ring-slate-900", isAdmin ? "bg-rose-100 dark:bg-rose-900/60 text-rose-700 dark:text-rose-300" : "bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300")}>
                   {user?.name?.charAt(0)}
                 </div>
                 <div className="hidden md:block text-left">

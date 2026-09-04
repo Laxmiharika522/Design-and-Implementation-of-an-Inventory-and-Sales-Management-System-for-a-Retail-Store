@@ -4,9 +4,23 @@ import { getNextId } from '../utils/dbUtils.js';
 
 export const getAllEmployees = async (req, res) => {
   try {
-    const [employees] = await pool.query('SELECT employee_id, employee_name, email, role, phone_number, pincode FROM employee');
+    const [employees] = await pool.query(`
+      SELECT 
+        e.employee_id, 
+        e.employee_name, 
+        e.email, 
+        e.role, 
+        e.phone_number, 
+        e.pincode,
+        COUNT(st.transaction_id) AS total_transactions,
+        COALESCE(SUM(st.grand_total), 0) AS total_sales_value
+      FROM employee e
+      LEFT JOIN sales_transaction st ON e.employee_id = st.employee_id
+      GROUP BY e.employee_id, e.employee_name, e.email, e.role, e.phone_number, e.pincode
+    `);
     res.json(employees);
   } catch (error) {
+    console.error('Error fetching employees:', error);
     res.status(500).json({ message: 'Error fetching employees' });
   }
 };

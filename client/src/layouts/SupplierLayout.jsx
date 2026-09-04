@@ -62,84 +62,64 @@ export const SupplierLayout = () => {
       {/* Sidebar */}
       <motion.aside
         initial={false}
-        animate={{ width: isSidebarOpen ? 300 : 72 }}
+        animate={{ width: isSidebarOpen ? 230 : 70 }}
         className={clsx(
-          "flex flex-col bg-white border-r border-slate-200/60 shadow-sm pt-2 z-50 overflow-hidden",
-          "fixed inset-y-0 left-0 h-full transform transition-transform duration-300 ease-in-out md:relative md:translate-x-0",
+          "flex flex-col bg-white border-r border-slate-200/90 shadow-sm pt-4 z-50 overflow-hidden shrink-0",
+          "fixed inset-y-0 left-0 h-screen transform transition-transform duration-300 ease-in-out md:sticky md:top-0 md:h-screen md:translate-x-0",
           isMobileSidebarOpen ? "translate-x-0" : "-translate-x-full"
         )}
       >
-        <div className="flex items-center justify-between p-4 mb-2">
+        <div className="flex items-center justify-between px-4 py-3 mb-1">
           <AnimatePresence mode="wait">
             {isSidebarOpen ? (
-              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex items-center gap-2">
-                <div className="w-8 h-8 bg-gradient-to-br from-purple-500 to-violet-600 rounded-lg flex items-center justify-center shadow-lg shadow-purple-500/20">
-                  <Truck size={16} className="text-white" />
+              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex items-center gap-2.5">
+                <div className="w-8 h-8 bg-gradient-to-br from-purple-600 to-fuchsia-600 rounded-xl flex items-center justify-center shadow-md shadow-purple-500/20 text-white text-sm font-bold shrink-0">
+                  <Truck size={17} />
                 </div>
-                <span className="font-black text-xl bg-clip-text text-transparent bg-gradient-to-r from-purple-600 to-violet-600 whitespace-nowrap">Supplier Hub</span>
+                <span className="font-extrabold text-lg text-slate-900 tracking-tight whitespace-nowrap">
+                  Inventory<span className="text-purple-600 font-black">Pro</span>
+                </span>
               </motion.div>
             ) : (
               <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="w-full flex justify-center">
-                <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-violet-600 rounded-xl flex items-center justify-center shadow-lg shadow-purple-500/20">
-                  <Truck size={18} className="text-white" />
+                <div className="w-8 h-8 bg-gradient-to-br from-purple-600 to-fuchsia-600 rounded-xl flex items-center justify-center shadow-md shadow-purple-500/20 text-white text-sm font-bold">
+                  <Truck size={17} />
                 </div>
               </motion.div>
             )}
           </AnimatePresence>
         </div>
 
+        {/* User Card */}
         {isSidebarOpen && (
-          <div className="mx-4 mb-4 p-3 bg-purple-50 rounded-xl border border-purple-100 space-y-2">
-            <p className="text-xs text-purple-500 font-black uppercase tracking-widest">Logged in as</p>
-            <p className="text-sm font-black font-black text-purple-700 uppercase truncate">{user?.name}</p>
-
-            {profile && (
-              <div className="pt-1 border-t border-purple-100 space-y-1.5">
-                {/* ID */}
-                <div className="flex items-center gap-1.5 text-xs text-slate-600">
-                  <Hash size={11} className="text-purple-400 shrink-0" />
-                  <span className="text-slate-400">ID:</span>
-                  <span className="font-black truncate">{profile.supplier_id ?? profile.id ?? '—'}</span>
-                </div>
-                {/* Pincode */}
-                {profile.pincode && (
-                  <div className="flex items-center gap-1.5 text-xs text-slate-600">
-                    <MapPin size={11} className="text-purple-400 shrink-0" />
-                    <span className="text-slate-400">Pincode:</span>
-                    <span className="font-black">{profile.pincode}</span>
-                  </div>
-                )}
-                {/* Phone numbers */}
-                {(profile.SupplierContacts || []).length > 0 && (
-                  <div className="flex items-start gap-1.5 text-xs text-slate-600">
-                    <Phone size={11} className="text-purple-400 shrink-0 mt-0.5" />
-                    <div>
-                      <span className="text-slate-400">Phone:</span>
-                      {(profile.SupplierContacts || []).map(c => (
-                        <div key={c.phone} className="font-black">{c.phone}</div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-                {/* Bank */}
-                {profile.bank_account_number && (
-                  <div className="flex items-center gap-1.5 text-xs text-slate-600">
-                    <Building2 size={11} className="text-purple-400 shrink-0" />
-                    <span className="text-slate-400">Bank A/C:</span>
-                    <span className="font-black truncate">{profile.bank_account_number}</span>
-                  </div>
-                )}
-                {profile.bankDetails?.bank_name && (
-                  <div className="flex items-center gap-1.5 text-xs text-slate-600 pl-4">
-                    <span className="text-slate-400 truncate">{profile.bankDetails.bank_name}</span>
-                    {profile.bankDetails.ifsc_code && <span className="font-black truncate">· {profile.bankDetails.ifsc_code}</span>}
-                  </div>
-                )}
+          <div className="mx-3 mb-3 p-3 bg-purple-50/60 rounded-2xl border border-purple-200/80 shadow-2xs space-y-2">
+            <div>
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] font-extrabold uppercase tracking-wider text-purple-700">Logged In As</span>
+                <span className="w-2 h-2 rounded-full bg-emerald-500 shadow-xs" title="Online" />
               </div>
-            )}
+              <p className="text-sm font-bold text-slate-900 truncate mt-0.5">{user?.name || 'Supplier'}</p>
+            </div>
+
+            <div className="pt-2 border-t border-purple-200/60 space-y-1 text-xs text-slate-700">
+              <div className="flex items-center justify-between gap-1">
+                <span className="text-slate-500 font-medium text-[11px] shrink-0">Email</span>
+                <span className="font-semibold text-slate-800 truncate text-[11px]" title={user?.email || profile?.email || profile?.contact_email}>
+                  {user?.email || profile?.email || profile?.contact_email || 'supplier@hub.com'}
+                </span>
+              </div>
+              
+              <div className="flex items-center justify-between gap-1">
+                <span className="text-slate-500 font-medium text-[11px] shrink-0">Phone</span>
+                <span className="font-semibold text-slate-800 text-[11px]">
+                  {profile?.SupplierContacts?.[0]?.phone || user?.phone || '8309799537'}
+                </span>
+              </div>
+            </div>
           </div>
         )}
 
+        {/* Navigation */}
         <nav className="flex-1 px-3 space-y-1 overflow-y-auto">
           {navItems.map((item) => {
             const Icon = item.icon;
@@ -150,17 +130,17 @@ export const SupplierLayout = () => {
                 to={item.path}
                 title={!isSidebarOpen ? item.name : undefined}
                 className={clsx(
-                  "flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 group relative",
+                  "flex items-center gap-2.5 px-3 py-2 rounded-xl transition-all duration-200 group relative text-xs md:text-sm tracking-tight",
                   isActive
-                    ? "bg-purple-50 text-purple-700 font-black"
-                    : "hover:bg-slate-100 text-slate-600"
+                    ? "bg-purple-50 text-purple-700 font-bold border border-purple-200/90 shadow-2xs"
+                    : "hover:bg-purple-50/50 text-slate-700 hover:text-purple-700 font-medium"
                 )}
               >
-                {isActive && <motion.div layoutId="supplier-active" className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-1/2 bg-purple-600 rounded-r-full" />}
-                <Icon size={20} className={clsx("shrink-0", isActive ? "text-purple-600" : "text-slate-400")} />
+                {isActive && <motion.div layoutId="supplier-active" className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-5 bg-purple-600 rounded-r-full" />}
+                <Icon size={17} className={clsx("shrink-0", isActive ? "text-purple-600" : "text-slate-400 group-hover:text-purple-600")} />
                 <AnimatePresence>
                   {isSidebarOpen && (
-                    <motion.span initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -8 }} className="whitespace-nowrap text-sm font-bold">
+                    <motion.span initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -8 }} className="whitespace-nowrap font-semibold">
                       {item.name}
                     </motion.span>
                   )}
@@ -170,45 +150,57 @@ export const SupplierLayout = () => {
           })}
         </nav>
 
-        <div className="p-3 space-y-2 mt-auto hidden md:block">
-          <button onClick={logout} className={clsx("w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-red-500 hover:bg-red-50 transition-colors", !isSidebarOpen && "justify-center")}>
-            <LogOut size={18} className="shrink-0" />
-            {isSidebarOpen && <span className="text-sm font-black font-black uppercase tracking-widest">Sign Out</span>}
+        {/* Footer Actions (Sign Out in Purple Theme) */}
+        <div className="p-3 space-y-2 mt-auto hidden md:block border-t border-slate-200/80">
+          <button 
+            onClick={logout} 
+            className={clsx(
+              "w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-white bg-gradient-to-r from-purple-600 to-fuchsia-600 hover:from-purple-500 hover:to-fuchsia-500 font-bold transition-all shadow-md shadow-purple-500/20 text-xs md:text-sm", 
+              !isSidebarOpen && "justify-center"
+            )}
+            title={!isSidebarOpen ? "Sign Out" : undefined}
+          >
+            <LogOut size={16} className="shrink-0 text-white" />
+            {isSidebarOpen && <span>Sign Out</span>}
           </button>
-          <button onClick={() => setIsSidebarOpen(!isSidebarOpen)} className="w-full p-2 flex items-center justify-center rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-500 transition-colors">
-            {isSidebarOpen ? <ChevronLeft size={18} /> : <ChevronRight size={18} />}
+
+          <button 
+            onClick={() => setIsSidebarOpen(!isSidebarOpen)} 
+            className="w-full p-2 flex items-center justify-center rounded-xl bg-slate-50 hover:bg-slate-100 border border-slate-200/80 text-slate-500 hover:text-slate-800 transition-colors font-medium"
+            title={isSidebarOpen ? "Collapse sidebar" : "Expand sidebar"}
+          >
+            {isSidebarOpen ? <ChevronLeft size={17} /> : <ChevronRight size={17} />}
           </button>
         </div>
-        
         {/* Mobile bottom buttons */}
-        <div className="p-3 space-y-2 mt-auto md:hidden">
-          <button onClick={logout} className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-red-500 hover:bg-red-50 transition-colors">
-            <LogOut size={18} className="shrink-0" />
-            <span className="text-sm font-black font-black uppercase tracking-widest">Sign Out</span>
+        <div className="p-3 space-y-2 mt-auto md:hidden border-t border-slate-200">
+          <button onClick={logout} className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-white bg-gradient-to-r from-purple-600 to-fuchsia-600 font-bold text-xs md:text-sm shadow-md shadow-purple-500/20">
+            <LogOut size={16} className="shrink-0 text-white" />
+            <span>Sign Out</span>
           </button>
         </div>
       </motion.aside>
 
       {/* Main */}
       <main className="flex-1 flex flex-col min-w-0 overflow-hidden">
-        <header className="h-16 px-4 md:px-8 flex items-center justify-between bg-white border-b border-slate-200/60 shadow-sm sticky top-0 z-30">
-          <div className="flex items-center gap-3">
+        <header className="h-14 px-4 md:px-8 flex items-center justify-between bg-white border-b border-slate-200/60 shadow-sm sticky top-0 z-30">
+          <div className="flex items-center gap-2.5">
             <button 
                onClick={() => setIsMobileSidebarOpen(true)}
                className="md:hidden p-2 -ml-2 text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
              >
-               <Menu size={24} />
+               <Menu size={22} />
              </button>
-            <Package size={20} className="text-purple-500 hidden md:block" />
-            <h2 className="font-black text-lg md:text-xl truncate">Supplier Portal</h2>
+            <Package size={18} className="text-purple-600 hidden md:block" />
+            <h2 className="font-extrabold text-slate-900 text-base md:text-lg tracking-tight truncate">Supplier Portal</h2>
           </div>
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-full bg-purple-100 text-purple-700 flex items-center justify-center font-bold text-sm font-black">
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-full bg-purple-100 text-purple-700 flex items-center justify-center font-bold text-xs border border-purple-200">
               {user?.name?.charAt(0)}
             </div>
             <div className="hidden md:block">
-              <p className="text-sm font-black font-black leading-none">{user?.name}</p>
-              <p className="text-xs text-slate-500 mt-0.5">Supplier</p>
+              <p className="text-xs font-extrabold text-slate-900 leading-none">{user?.name}</p>
+              <p className="text-[11px] text-slate-500 font-medium mt-0.5">Verified Supplier</p>
             </div>
           </div>
         </header>

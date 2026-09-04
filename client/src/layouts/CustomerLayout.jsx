@@ -48,39 +48,50 @@ export const CustomerLayout = () => {
       {/* Sidebar */}
       <motion.aside
         initial={false}
-        animate={{ width: isSidebarOpen ? 240 : 72 }}
+        animate={{ width: isSidebarOpen ? 280 : 72 }}
         className={clsx(
-          "flex flex-col bg-white border-r border-slate-200/60 shadow-sm pt-2 z-50 overflow-hidden",
-          "fixed inset-y-0 left-0 h-full transform transition-transform duration-300 ease-in-out md:relative md:translate-x-0",
+          "flex flex-col bg-white border-r border-slate-200/90 shadow-sm pt-4 z-50 overflow-hidden shrink-0",
+          "fixed inset-y-0 left-0 h-screen transform transition-transform duration-300 ease-in-out md:sticky md:top-0 md:h-screen md:translate-x-0",
           isMobileSidebarOpen ? "translate-x-0" : "-translate-x-full"
         )}
       >
-        <div className="flex items-center justify-between p-4 mb-2">
+        {/* Brand Header */}
+        <div className="flex items-center justify-between px-4 py-2 mb-3">
           <AnimatePresence mode="wait">
             {isSidebarOpen ? (
-              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex items-center gap-2">
-                <div className="w-8 h-8 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-lg flex items-center justify-center shadow-lg shadow-emerald-500/20">
-                  <ShoppingBag size={16} className="text-white" />
+              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex items-center gap-2.5">
+                <div className="w-8 h-8 bg-emerald-600 rounded-xl flex items-center justify-center shadow-xs text-white font-black text-sm shrink-0">
+                  <ShoppingBag size={18} />
                 </div>
-                <span className="font-bold text-lg bg-clip-text text-transparent bg-gradient-to-r from-emerald-600 to-teal-600 whitespace-nowrap">My Store</span>
+                <span className="font-extrabold text-lg text-slate-900 tracking-tight whitespace-nowrap">
+                  Inventory<span className="text-emerald-600 font-black">Pro</span>
+                </span>
               </motion.div>
             ) : (
               <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="w-full flex justify-center">
-                <div className="w-10 h-10 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-xl flex items-center justify-center shadow-lg shadow-emerald-500/20">
-                  <ShoppingBag size={18} className="text-white" />
+                <div className="w-9 h-9 bg-emerald-600 rounded-xl flex items-center justify-center shadow-xs text-white text-base">
+                  <ShoppingBag size={18} />
                 </div>
               </motion.div>
             )}
           </AnimatePresence>
         </div>
 
+        {/* User Card (Soft Light Airy Design) */}
         {isSidebarOpen && (
-          <div className="mx-4 mb-4 p-3 bg-emerald-50 rounded-xl border border-emerald-100">
-            <p className="text-xs text-emerald-600 font-medium flex items-center gap-1"><Star size={10} /> Welcome back!</p>
-            <p className="text-sm font-bold text-emerald-800 truncate">{user?.name}</p>
+          <div className="mx-3.5 mb-4 p-3 bg-emerald-50/70 rounded-2xl border border-emerald-200/80 shadow-xs">
+            <div className="flex items-center gap-1.5 mb-0.5">
+              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+              <p className="text-[10px] uppercase font-bold tracking-wider text-emerald-800">Welcome Back</p>
+            </div>
+            <p className="text-sm font-bold text-slate-900 truncate">{user?.name || 'Customer'}</p>
+            <span className="inline-block text-[10px] font-bold text-emerald-700 bg-emerald-100/80 px-2 py-0.5 rounded-md mt-1 border border-emerald-200/60">
+              Verified Member
+            </span>
           </div>
         )}
 
+        {/* Navigation Items */}
         <nav className="flex-1 px-3 space-y-1 overflow-y-auto">
           {navItems.map((item) => {
             const Icon = item.icon;
@@ -91,14 +102,14 @@ export const CustomerLayout = () => {
                 to={item.path}
                 title={!isSidebarOpen ? item.name : undefined}
                 className={clsx(
-                  "flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 group relative",
+                  "flex items-center gap-3 px-3.5 py-2.5 rounded-xl transition-all duration-200 group relative",
                   isActive
-                    ? "bg-emerald-50 text-emerald-700 font-semibold"
-                    : "hover:bg-slate-100 text-slate-600"
+                    ? "bg-emerald-50 text-emerald-800 font-bold border border-emerald-200/80 shadow-xs"
+                    : "hover:bg-slate-100/80 text-slate-700 font-medium"
                 )}
               >
-                {isActive && <motion.div layoutId="customer-active" className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-1/2 bg-emerald-600 rounded-r-full" />}
-                <Icon size={20} className={clsx("shrink-0", isActive ? "text-emerald-600" : "text-slate-400")} />
+                {isActive && <motion.div layoutId="customer-active" className="absolute left-0 top-1/2 -translate-y-1/2 w-1.5 h-1/2 bg-emerald-600 rounded-r-full" />}
+                <Icon size={18} className={clsx("shrink-0", isActive ? "text-emerald-600" : "text-slate-500 group-hover:text-emerald-600")} />
                 <AnimatePresence>
                   {isSidebarOpen && (
                     <motion.span initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -8 }} className="whitespace-nowrap text-sm">
@@ -111,45 +122,64 @@ export const CustomerLayout = () => {
           })}
         </nav>
 
-        <div className="p-3 space-y-2 mt-auto hidden md:block">
-          <button onClick={logout} className={clsx("w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-red-500 hover:bg-red-50 transition-colors", !isSidebarOpen && "justify-center")}>
-            <LogOut size={18} className="shrink-0" />
-            {isSidebarOpen && <span className="text-sm font-medium">Sign Out</span>}
+        {/* Footer Actions (Sign Out at Very Bottom) */}
+        <div className="p-3 space-y-2 mt-auto hidden md:block border-t border-slate-200/80">
+          <button 
+            onClick={logout} 
+            className={clsx(
+              "w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-red-600 hover:bg-red-50 hover:text-red-700 font-bold transition-all border border-red-200 text-sm shadow-xs", 
+              !isSidebarOpen && "justify-center"
+            )}
+            title={!isSidebarOpen ? "Sign Out" : undefined}
+          >
+            <LogOut size={17} className="shrink-0" />
+            {isSidebarOpen && <span>Sign Out</span>}
           </button>
-          <button onClick={() => setIsSidebarOpen(!isSidebarOpen)} className="w-full p-2 flex items-center justify-center rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-500 transition-colors">
-            {isSidebarOpen ? <ChevronLeft size={18} /> : <ChevronRight size={18} />}
+
+          <button 
+            onClick={() => setIsSidebarOpen(!isSidebarOpen)} 
+            className="w-full p-2 flex items-center justify-center rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 transition-colors"
+            title={isSidebarOpen ? "Collapse sidebar" : "Expand sidebar"}
+          >
+            {isSidebarOpen ? <ChevronLeft size={17} /> : <ChevronRight size={17} />}
           </button>
         </div>
 
         {/* Mobile bottom buttons */}
-        <div className="p-3 space-y-2 mt-auto md:hidden">
-          <button onClick={logout} className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-red-500 hover:bg-red-50 transition-colors">
+        <div className="p-3 space-y-2 mt-auto md:hidden border-t border-slate-200">
+          <button onClick={logout} className="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-red-600 hover:bg-red-50 font-bold border border-red-200">
             <LogOut size={18} className="shrink-0" />
-            <span className="text-sm font-medium">Sign Out</span>
+            <span className="text-sm font-bold">Sign Out</span>
           </button>
         </div>
       </motion.aside>
 
       {/* Main */}
-      <main className="flex-1 flex flex-col min-w-0 overflow-hidden">
-        <header className="h-16 px-4 md:px-8 flex items-center justify-between bg-white border-b border-slate-200/60 shadow-sm sticky top-0 z-30">
+      <main className="flex-1 flex flex-col min-w-0 overflow-hidden bg-slate-100/70">
+        <header className="h-16 px-4 md:px-8 flex items-center justify-between bg-white border-b border-slate-200 shadow-xs sticky top-0 z-30">
           <div className="flex items-center gap-3">
              <button 
                onClick={() => setIsMobileSidebarOpen(true)}
-               className="md:hidden p-2 -ml-2 text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
+               className="md:hidden p-2 -ml-2 text-slate-700 hover:bg-slate-100 rounded-lg transition-colors"
              >
                <Menu size={24} />
              </button>
-            <ShoppingCart size={20} className="text-emerald-500 hidden md:block" />
-            <h2 className="font-bold text-lg md:text-xl truncate">Customer Portal</h2>
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 rounded-xl bg-emerald-700 flex items-center justify-center text-white font-black text-sm shadow-sm">
+                <ShoppingBag size={18} />
+              </div>
+              <h2 className="font-extrabold text-base md:text-lg tracking-tight text-slate-900">
+                Customer Portal
+              </h2>
+            </div>
           </div>
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold text-sm">
-              {user?.name?.charAt(0)}
+            <div className="w-9 h-9 rounded-full bg-emerald-100 text-emerald-800 flex items-center justify-center font-bold text-sm border border-emerald-200">
+              {user?.name?.charAt(0) || 'C'}
             </div>
             <div className="hidden md:block">
-              <p className="text-sm font-semibold leading-none">{user?.name}</p>
-              <p className="text-xs text-slate-500 mt-0.5">Customer</p>
+              <p className="text-sm font-bold leading-none text-slate-900">{user?.name}</p>
+              <p className="text-xs text-slate-500 mt-0.5 font-medium">Customer Member</p>
             </div>
           </div>
         </header>

@@ -1,255 +1,303 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useNavigate, useLocation } from 'react-router-dom';
 import axios from 'axios';
-import { Truck, Save, CheckCircle, Loader2, Package } from 'lucide-react';
+import { 
+  Truck, Save, CheckCircle, Loader2, Package, 
+  User, Phone, Calendar, ArrowLeft, ShieldCheck 
+} from 'lucide-react';
+import { motion } from 'framer-motion';
+
+const API_BASE = import.meta.env.VITE_API_URL;
+const getAuthHeaders = () => ({
+  headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+});
 
 const STATUS_COLORS = {
-  Pending:      'bg-yellow-100 text-yellow-700',
-  'In Progress':'bg-blue-100 text-blue-700',
-  Shipped:      'bg-purple-100 text-purple-700',
-  Delivered:    'bg-green-100 text-green-700',
-  Cancelled:    'bg-red-100 text-red-700',
-  Received:     'bg-emerald-100 text-emerald-700',
+  Pending: 'bg-amber-50 text-amber-700 border-amber-200',
+  Shipped: 'bg-blue-50 text-blue-700 border-blue-200',
+  Delivered: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+  Cancelled: 'bg-slate-100 text-slate-600 border-slate-200',
+  'In Progress': 'bg-indigo-50 text-indigo-700 border-indigo-200',
+  Received: 'bg-teal-50 text-teal-700 border-teal-200',
 };
 
-const SHIPPING_MODES = ['Truck', 'Courier', 'Rail', 'Air Freight', 'Two Wheeler', 'Van'];
+const SHIPPING_MODES = [
+  'Truck / Ground Freight',
+  'Courier / Express Logistics',
+  'Rail Cargo',
+  'Air Freight',
+  'Container Transport',
+  'Local Delivery Van'
+];
 
 export default function SupplierDelivery() {
+  const navigate = useNavigate();
+  const location = useLocation();
   const queryClient = useQueryClient();
+  
+  const selectedPoId = location.state?.selectedPoId;
   const [forms, setForms] = useState({});
-  const [saved, setSaved] = useState({});
 
   const { data: orders = [], isLoading } = useQuery({
     queryKey: ['supplierDelivery'],
-    queryFn: () => axios.get(import.meta.env.VITE_API_URL + '/supplier/orders', {
-      headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
-    }).then(r => r.data),
-    onSuccess: (data) => {
-      // Pre-fill forms from existing delivery details
+    queryFn: async () => {
+      const res = await axios.get(`${API_BASE}/supplier/orders`, getAuthHeaders());
+      return res.data;
+    }
+  });
+
+  // Pre-fill form state whenever orders are loaded or updated
+  useEffect(() => {
+    if (orders && orders.length > 0) {
       const initial = {};
-      data.forEach(order => {
-        const isDelivered = ['Delivered', 'Received'].includes(order.status);
-        
-        let mode = '';
-        let agent = '';
-        let date = order.delivery_date || '';
-
-        if (order.DeliveryDetail) {
-          mode = order.DeliveryDetail.shipping_mode || '';
-          agent = order.DeliveryDetail.purchase_agent_name || '';
-        }
-
-        if (isDelivered) {
-          if (!mode) mode = 'Truck';
-          if (!agent) agent = 'System Assigned Partner';
-          if (!date) {
-            const tempDate = new Date(order.order_date);
-            tempDate.setDate(tempDate.getDate() + 3);
-            date = tempDate.toISOString().split('T')[0];
+      orders.forEach(order => {
+        const dd = order.DeliveryDetail || {};
+        let formattedDate = '';
+        if (order.delivery_date) {
+          try {
+            formattedDate = new Date(order.delivery_date).toISOString().split('T')[0];
+          } catch {
+            formattedDate = '';
           }
         }
 
         initial[order.po_id] = {
-          shipping_mode: mode,
-          purchase_agent_name: agent,
-          delivery_date: date,
+          shipping_mode: dd.shipping_mode || 'Truck / Ground Freight',
+          purchase_agent_name: dd.purchase_agent_name || '',
+          agent_contact: dd.agent_contact || '',
+          delivery_date: formattedDate,
         };
       });
       setForms(initial);
     }
-  });
+  }, [orders]);
 
-  const { data: feeMap = {} } = useQuery({
-    queryKey: ['supplierFees'],
-    queryFn: () => axios.get(import.meta.env.VITE_API_URL + '/supplier/fees', {
-      headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
-    }).then(r => r.data)
-  });
-
-  const saveDelivery = useMutation({
-    mutationFn: ({ po_id, data }) => axios.post(`${import.meta.env.VITE_API_URL}/supplier/delivery/${po_id}`, data, {
-      headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
-    }),
-    onSuccess: (_, { po_id }) => {
-      queryClient.invalidateQueries({ queryKey: ['supplierDelivery'] });
-      setSaved(prev => ({ ...prev, [po_id]: true }));
-      setTimeout(() => setSaved(prev => ({ ...prev, [po_id]: false })), 2500);
-    }
-  });
-
-  const updateStatus = useMutation({
-    mutationFn: ({ id, status }) => axios.put(`${import.meta.env.VITE_API_URL}/supplier/orders/${id}/status`, { status }, {
-      headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
-    }),
+  const saveDeliveryMutation = useMutation({
+    mutationFn: async ({ po_id, data }) => {
+      return axios.post(`${API_BASE}/supplier/delivery/${po_id}`, data, getAuthHeaders());
+    },
     onSuccess: () => {
-      // Refetch delivery list immediately after status change.
       queryClient.invalidateQueries({ queryKey: ['supplierDelivery'] });
+      queryClient.invalidateQueries({ queryKey: ['supplierOrders'] });
+      queryClient.invalidateQueries({ queryKey: ['supplierStats'] });
+      // Redirect back to Purchase Orders page as requested
+      navigate('/supplier/orders');
     }
   });
 
   const handleFormChange = (po_id, field, value) => {
-    setForms(prev => ({ ...prev, [po_id]: { ...(prev[po_id] || {}), [field]: value } }));
+    setForms(prev => ({
+      ...prev,
+      [po_id]: { ...(prev[po_id] || {}), [field]: value }
+    }));
   };
 
-  // Only show orders that are in active/actionable delivery states
-  const activeOrders = orders.filter(o => !['Cancelled', 'Pending'].includes(o.status));
+  const handleSaveAndRedirect = async (po_id) => {
+    const formData = forms[po_id] || {};
+    await saveDeliveryMutation.mutateAsync({ po_id, data: formData });
+  };
 
-  if (isLoading) return <div className="p-8 flex justify-center"><Loader2 className="animate-spin text-purple-500" /></div>;
+  // Active / actionable orders (not cancelled)
+  const activeOrders = orders.filter(o => o.status !== 'Cancelled');
+
+  // If redirected with selectedPoId, put that order first
+  const sortedOrders = [...activeOrders].sort((a, b) => {
+    if (selectedPoId && a.po_id === selectedPoId) return -1;
+    if (selectedPoId && b.po_id === selectedPoId) return 1;
+    return b.po_id - a.po_id;
+  });
+
+  if (isLoading) {
+    return (
+      <div className="p-12 flex flex-col items-center justify-center text-slate-400 font-medium">
+        <Loader2 className="w-7 h-7 animate-spin text-purple-600 mb-2" />
+        <span className="text-xs font-semibold">Loading delivery details...</span>
+      </div>
+    );
+  }
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h2 className="text-2xl font-bold text-slate-800">Delivery Management</h2>
-        <p className="text-slate-500 text-sm mt-1">Update shipping details and track delivery status for active orders.</p>
+    <div className="space-y-4 pb-8 max-w-7xl mx-auto">
+      {/* Compact Header Section */}
+      <div className="bg-white p-3.5 sm:p-4 rounded-xl border border-slate-200/80 shadow-2xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div>
+          <div className="flex items-center gap-2">
+            <button 
+              onClick={() => navigate('/supplier/orders')}
+              className="p-1 hover:bg-slate-100 rounded-lg text-slate-600 transition-colors"
+              title="Back to Purchase Orders"
+            >
+              <ArrowLeft size={16} />
+            </button>
+            <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-purple-600 to-fuchsia-600 text-white shadow-xs flex items-center justify-center font-bold">
+              <Truck size={15} />
+            </div>
+            <h1 className="text-lg font-extrabold text-slate-900 tracking-tight">Delivery & Logistics</h1>
+          </div>
+          <p className="text-slate-500 text-[10px] font-bold uppercase tracking-wider mt-0.5 ml-9">
+            Assign Agent, Shipping Mode & Expected Delivery Dates for Dispatch
+          </p>
+        </div>
+
+        <button
+          onClick={() => navigate('/supplier/orders')}
+          className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-lg transition-colors flex items-center gap-1 self-start sm:self-auto"
+        >
+          <ArrowLeft size={13} /> Back to Orders
+        </button>
       </div>
 
-      {activeOrders.length === 0 ? (
-        <div className="bg-white rounded-2xl border border-slate-200 p-16 text-center shadow-sm">
-          <Truck size={52} className="mx-auto text-slate-200 mb-3" />
-          <p className="text-slate-400 font-medium">No active deliveries</p>
-          <p className="text-slate-400 text-sm mt-1">Accept orders first from the Purchase Orders tab.</p>
+      {/* Selected Order Highlight Notice */}
+      {selectedPoId && (
+        <div className="p-3 bg-purple-50 border border-purple-200 rounded-xl flex items-center justify-between text-xs text-purple-900 font-bold">
+          <div className="flex items-center gap-2">
+            <ShieldCheck size={16} className="text-purple-600 shrink-0" />
+            <span>Fulfillment Setup for Order #PO-{selectedPoId}: Assign logistics details below and click "Save Details".</span>
+          </div>
+        </div>
+      )}
+
+      {/* Orders List */}
+      {sortedOrders.length === 0 ? (
+        <div className="bg-white rounded-xl border border-slate-200/80 p-8 text-center shadow-2xs">
+          <Truck size={36} className="mx-auto text-slate-300 mb-2" />
+          <h3 className="text-sm font-bold text-slate-700">No active delivery orders</h3>
+          <p className="text-xs text-slate-400 mt-1">Pending and shipped purchase orders will appear here for fulfillment setup.</p>
         </div>
       ) : (
-        <div className="space-y-4">
-          {activeOrders.map(order => {
+        <div className="space-y-3">
+          {sortedOrders.map(order => {
             const form = forms[order.po_id] || {};
-            const isDelivered = ['Delivered', 'Received'].includes(order.status);
-            
-            let displayMode = form.shipping_mode || (order.DeliveryDetail && order.DeliveryDetail.shipping_mode);
-            let displayAgent = form.purchase_agent_name || (order.DeliveryDetail && order.DeliveryDetail.purchase_agent_name);
-            let displayDate = form.delivery_date || order.delivery_date;
-
-            // Keep amounts consistent with SupplierOrders (GST tiers + optional payment fee).
-            const computedMethod = order.payment_method || 'Bank Transfer';
-            const computedFeeRate = feeMap[computedMethod] ?? 0;
-            let computedGrandTotal = parseFloat(order.total_amount || 0);
-
-            if (order.PurchaseOrderDetails && order.PurchaseOrderDetails.length > 0) {
-              const computedSubtotal = order.PurchaseOrderDetails.reduce((sum, d) => {
-                const qty = d.quantity_ordered || 0;
-                const unitPrice = parseFloat(d.Product?.unit_price || 0);
-                const baseTotal = unitPrice * qty;
-                const catName = d.Product?.Category?.category_name || '';
-
-                let gstRate = 0.05;
-                if (['Fruits & Vegetables'].includes(catName)) gstRate = 0.00;
-                else if (['Dairy Products', 'Bakery & Bread', 'Grocery & Staples'].includes(catName)) gstRate = 0.05;
-                else if (['Beverages', 'Snacks & Packaged Foods'].includes(catName)) gstRate = 0.12;
-                else if (['Personal Care', 'Household & Cleaning', 'Health & Wellness', 'Baby & Kids Products'].includes(catName)) gstRate = 0.18;
-
-                return sum + baseTotal + (baseTotal * gstRate);
-              }, 0);
-
-              const computedFeeAmt = computedSubtotal * computedFeeRate;
-              computedGrandTotal = computedSubtotal + computedFeeAmt;
-            }
-
-            if (isDelivered) {
-              if (!displayMode) displayMode = 'Truck';
-              if (!displayAgent) displayAgent = 'System Assigned Partner';
-              if (!displayDate) {
-                const tempDate = new Date(order.order_date);
-                tempDate.setDate(tempDate.getDate() + 3);
-                displayDate = tempDate.toISOString().split('T')[0];
-              }
-            }
+            const isHighlighted = selectedPoId === order.po_id;
+            const isSaved = order.status !== 'Pending' || !!order.DeliveryDetail?.purchase_agent_name;
+            const totalAmount = parseFloat(order.total_amount || 0);
 
             return (
-              <div key={order.po_id} className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-                {/* Header */}
-                <div className="bg-slate-50 px-6 py-4 border-b border-slate-200 flex items-center justify-between gap-3 flex-wrap">
-                  <div className="flex items-center gap-3">
-                    <div className="w-9 h-9 bg-purple-100 rounded-xl flex items-center justify-center">
-                      <Package size={16} className="text-purple-600" />
+              <motion.div 
+                key={order.po_id}
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                className={`bg-white rounded-xl border shadow-2xs overflow-hidden transition-all ${
+                  isHighlighted ? 'border-purple-400 ring-2 ring-purple-400/20' : 'border-slate-200/80 hover:border-slate-300'
+                }`}
+              >
+                {/* Compact Order Top Bar */}
+                <div className="px-4 py-2.5 bg-slate-50/80 border-b border-slate-200/80 flex flex-wrap items-center justify-between gap-2">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-7 h-7 bg-purple-100 text-purple-800 rounded-lg flex items-center justify-center font-bold">
+                      <Package size={15} />
                     </div>
                     <div>
-                      <p className="font-bold text-slate-800">PO #{order.po_id}</p>
-                      <p className="text-xs text-slate-400">{new Date(order.order_date).toLocaleDateString('en-IN', {day:'numeric', month:'short', year:'numeric'})}</p>
+                      <div className="flex items-center gap-2">
+                        <h3 className="font-extrabold text-slate-900 text-sm">#PO-{order.po_id}</h3>
+                        <span className={`px-2 py-0.5 rounded-md text-[10px] font-bold border ${STATUS_COLORS[order.status] || 'bg-slate-100 text-slate-600'}`}>
+                          {order.status}
+                        </span>
+                      </div>
+                      <p className="text-[11px] text-slate-500 font-medium mt-0.5">
+                        Order Date: {new Date(order.order_date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
+                      </p>
                     </div>
                   </div>
-                  <div className="flex items-center gap-3">
-                    <span className={`px-2.5 py-1 rounded-full text-xs font-bold ${STATUS_COLORS[order.status] || 'bg-slate-100 text-slate-600'}`}>{order.status}</span>
-                    <p className="font-bold text-slate-800">₹{computedGrandTotal.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
+
+                  <div className="text-right">
+                    <p className="text-[10px] font-bold uppercase text-slate-400 tracking-wider">Total Amount</p>
+                    <p className="font-extrabold text-sm text-slate-900">
+                      ₹{totalAmount.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                    </p>
                   </div>
                 </div>
 
-                {/* Delivery Form */}
-                <div className="p-6 grid md:grid-cols-3 gap-4">
-                  <div>
-                    <label className="block text-xs font-semibold text-slate-600 mb-1.5">Shipping Mode</label>
-                    {isDelivered ? (
-                      <div className="px-3 py-2 text-sm font-medium text-slate-800 bg-slate-50 border border-slate-200 rounded-xl">
-                        {displayMode}
-                      </div>
-                    ) : (
+                {/* Form Fields Grid */}
+                <div className="p-3.5 sm:p-4 space-y-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                    {/* Field 1: Shipping Mode */}
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 mb-1 flex items-center gap-1">
+                        <Truck size={13} className="text-purple-600" /> Shipping Mode
+                      </label>
                       <select
                         value={form.shipping_mode || ''}
                         onChange={e => handleFormChange(order.po_id, 'shipping_mode', e.target.value)}
-                        className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-400">
-                        <option value="">Select mode...</option>
-                        {SHIPPING_MODES.map(m => <option key={m} value={m}>{m}</option>)}
+                        disabled={isSaved}
+                        className="w-full bg-slate-50/90 border border-slate-200/90 rounded-lg px-2.5 py-1.5 text-xs font-medium text-slate-900 focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 transition-all disabled:opacity-75 disabled:bg-slate-100"
+                      >
+                        {SHIPPING_MODES.map(m => (
+                          <option key={m} value={m}>{m}</option>
+                        ))}
                       </select>
-                    )}
-                  </div>
-                  <div>
-                    <label className="block text-xs font-semibold text-slate-600 mb-1.5">Purchase Agent Name</label>
-                    {isDelivered ? (
-                      <div className="px-3 py-2 text-sm font-medium text-slate-800 bg-slate-50 border border-slate-200 rounded-xl">
-                        {displayAgent}
-                      </div>
-                    ) : (
+                    </div>
+
+                    {/* Field 2: Agent Name */}
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 mb-1 flex items-center gap-1">
+                        <User size={13} className="text-purple-600" /> Agent Name
+                      </label>
                       <input
+                        type="text"
                         value={form.purchase_agent_name || ''}
                         onChange={e => handleFormChange(order.po_id, 'purchase_agent_name', e.target.value)}
-                        placeholder="Agent name..."
-                        className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-400"
+                        placeholder="e.g. Rajesh Kumar"
+                        disabled={isSaved}
+                        className="w-full bg-slate-50/90 border border-slate-200/90 rounded-lg px-2.5 py-1.5 text-xs font-medium text-slate-900 focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 transition-all placeholder:text-slate-400 disabled:opacity-75 disabled:bg-slate-100"
                       />
-                    )}
-                  </div>
-                  <div>
-                    <label className="block text-xs font-semibold text-slate-600 mb-1.5">Expected Delivery Date</label>
-                    {isDelivered ? (
-                      <div className="px-3 py-2 text-sm font-medium text-slate-800 bg-slate-50 border border-slate-200 rounded-xl">
-                        {displayDate ? new Date(displayDate).toLocaleDateString('en-IN', {day:'numeric', month:'short', year:'numeric'}) : 'Not specified'}
-                      </div>
-                    ) : (
+                    </div>
+
+                    {/* Field 3: Agent Contact */}
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 mb-1 flex items-center gap-1">
+                        <Phone size={13} className="text-purple-600" /> Agent Contact
+                      </label>
+                      <input
+                        type="text"
+                        value={form.agent_contact || ''}
+                        onChange={e => handleFormChange(order.po_id, 'agent_contact', e.target.value)}
+                        placeholder="e.g. +91 9876543210"
+                        disabled={isSaved}
+                        className="w-full bg-slate-50/90 border border-slate-200/90 rounded-lg px-2.5 py-1.5 text-xs font-medium text-slate-900 focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 transition-all placeholder:text-slate-400 disabled:opacity-75 disabled:bg-slate-100"
+                      />
+                    </div>
+
+                    {/* Field 4: Expected Delivery Date */}
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 mb-1 flex items-center gap-1">
+                        <Calendar size={13} className="text-purple-600" /> Expected Delivery Date
+                      </label>
                       <input
                         type="date"
                         value={form.delivery_date || ''}
                         onChange={e => handleFormChange(order.po_id, 'delivery_date', e.target.value)}
-                        className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-400"
+                        disabled={isSaved}
+                        className="w-full bg-slate-50/90 border border-slate-200/90 rounded-lg px-2.5 py-1.5 text-xs font-medium text-slate-900 focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 transition-all disabled:opacity-75 disabled:bg-slate-100"
                       />
+                    </div>
+                  </div>
+
+                  {/* Single Action Row: Save Details Button shown ONLY when NOT saved */}
+                  <div className="pt-2 border-t border-slate-100 flex justify-end">
+                    {isSaved ? (
+                      <div className="flex items-center gap-1.5 px-3 py-1 bg-emerald-50 text-emerald-700 font-bold text-xs rounded-lg border border-emerald-200">
+                        <CheckCircle size={14} className="text-emerald-600 shrink-0" />
+                        <span>Logistics Details Saved</span>
+                      </div>
+                    ) : (
+                      <button
+                        onClick={() => handleSaveAndRedirect(order.po_id)}
+                        disabled={saveDeliveryMutation.isPending}
+                        className="px-4 py-1.5 bg-gradient-to-r from-purple-600 to-fuchsia-600 hover:from-purple-500 hover:to-fuchsia-500 text-white font-bold text-xs rounded-lg shadow-xs transition-all hover:-translate-y-0.5 flex items-center gap-1.5 shrink-0 disabled:opacity-50"
+                      >
+                        {saveDeliveryMutation.isPending ? (
+                          <Loader2 size={14} className="animate-spin text-white" />
+                        ) : (
+                          <Save size={14} className="text-white" />
+                        )}
+                        <span>Save Details</span>
+                      </button>
                     )}
                   </div>
                 </div>
-
-                {/* Actions */}
-                {!isDelivered && (
-                  <div className="px-6 pb-5 flex flex-wrap items-center gap-3">
-                    <button
-                      onClick={() => saveDelivery.mutate({ po_id: order.po_id, data: form })}
-                      disabled={saveDelivery.isPending}
-                      className="flex items-center gap-2 px-4 py-2 bg-slate-800 text-white rounded-xl text-sm font-semibold hover:bg-slate-700 transition-colors">
-                      {saved[order.po_id] ? <CheckCircle size={15} className="text-emerald-400" /> : <Save size={15} />}
-                      {saved[order.po_id] ? 'Saved!' : 'Save Details'}
-                    </button>
-                    {order.status === 'In Progress' && (
-                      <button
-                        onClick={() => updateStatus.mutate({ id: order.po_id, status: 'Shipped' })}
-                        className="flex items-center gap-2 px-4 py-2 bg-purple-500 text-white rounded-xl text-sm font-semibold hover:bg-purple-600 transition-colors">
-                        <Truck size={15} /> Mark as Shipped
-                      </button>
-                    )}
-                    {order.status === 'Shipped' && (
-                      <button
-                        onClick={() => updateStatus.mutate({ id: order.po_id, status: 'Delivered' })}
-                        className="flex items-center gap-2 px-4 py-2 bg-green-500 text-white rounded-xl text-sm font-semibold hover:bg-green-600 transition-colors">
-                        <CheckCircle size={15} /> Mark as Delivered
-                      </button>
-                    )}
-                  </div>
-                )}
-              </div>
+              </motion.div>
             );
           })}
         </div>
