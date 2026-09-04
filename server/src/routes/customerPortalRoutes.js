@@ -123,16 +123,16 @@ router.get('/orders', async (req, res) => {
       }
     }
 
-    // Compute per-order GST subtotal and processing fee
+    // Compute per-order tax subtotal and processing fee
     const orders = Array.from(orderMap.values()).map(order => {
       const itemSubtotal = order.SalesTransactionDetails.reduce((s, d) => {
         const qty = parseInt(d.quantity_sold) || 0;
         const price = parseFloat(d.unit_price) || 0;
         return s + qty * price;
       }, 0);
-      const gst_total = order.SalesTransactionDetails.reduce((s, d) => s + (parseFloat(d.tax) || 0), 0);
-      const processing_fee = itemSubtotal * order.fee_rate + gst_total * order.fee_rate;
-      return { ...order, gst_total, processing_fee };
+      const tax_total = order.SalesTransactionDetails.reduce((s, d) => s + (parseFloat(d.tax) || 0), 0);
+      const processing_fee = itemSubtotal * order.fee_rate + tax_total * order.fee_rate;
+      return { ...order, tax_total, processing_fee };
     });
     
     res.json(orders);
@@ -169,41 +169,38 @@ router.post('/orders', async (req, res) => {
       }
       
       const inv = invRows[0];
-      let taxCategory = 'GST_5', taxRate = 0.05;
-      const catName = product.category_name || '';
-      if (['Fruits & Vegetables'].includes(catName)) { taxCategory = 'GST_0'; taxRate = 0.00; }
-      else if (['Dairy Products', 'Bakery & Bread', 'Grocery & Staples'].includes(catName)) { taxCategory = 'GST_5'; taxRate = 0.05; }
-      else if (['Beverages', 'Snacks & Packaged Foods'].includes(catName)) { taxCategory = 'GST_12'; taxRate = 0.12; }
-      else if (['Personal Care', 'Household & Cleaning', 'Health & Wellness', 'Baby & Kids Products'].includes(catName)) { taxCategory = 'GST_18'; taxRate = 0.18; }
-
       const unitPrice = parseFloat(product.unit_price);
-      const taxAmount = (unitPrice * taxRate) * item.quantity;
-      const line_total = (unitPrice * item.quantity) + taxAmount;
+      const taxAmount = 0;
+      const line_total = unitPrice * item.quantity;
       grand_total += line_total;
 
       detailRows.push({
         product_id: item.product_id,
         quantity_sold: item.quantity,
         unit_price: unitPrice,
-        tax_category: taxCategory,
-        tax: taxAmount,
+        tax_category: 'STANDARD',
+        tax: 0,
         line_total: line_total
       });
       
       await connection.query('UPDATE inventory SET current_stock = current_stock - ?, stock_out = IFNULL(stock_out, 0) + ? WHERE inventory_id = ?', [item.quantity, item.quantity, inv.inventory_id]);
     }
 
-    const validMethods = ['Cash', 'UPI', 'Credit Card', 'Debit Card'];
-    const payTypeId = validMethods.includes(payment_method) ? payment_method : 'UPI';
-    const [feeRows] = await connection.query('SELECT payment_processing_fee FROM sales_transaction_fees WHERE payment_type_id = ?', [payTypeId]);
-    const feeRate = feeRows.length > 0 ? parseFloat(feeRows[0].payment_processing_fee) / 100 : 0;
-    grand_total += grand_total * feeRate;
+    const chosenPaymentType = payment_method || 'UPI';
+    const feeRatesMap = { 'Cash': 0.00, 'UPI': 0.50, 'Debit Card': 1.00, 'Credit Card': 2.00 };
+    const chosenFee = feeRatesMap[chosenPaymentType] ?? 0.50;
+    await connection.query("INSERT INTO sales_transaction_fees (payment_type_id, payment_processing_fee) VALUES (?, ?) ON DUPLICATE KEY UPDATE payment_processing_fee = VALUES(payment_processing_fee)", [chosenPaymentType, chosenFee]);
+
+    const subTotal = detailRows.reduce((sum, r) => sum + r.line_total, 0);
+    const totalItems = detailRows.reduce((sum, r) => sum + r.quantity_sold, 0);
+    const deliveryFee = subTotal >= 499 ? 0 : 40;
+    const finalGrandTotal = subTotal + deliveryFee;
 
     const transactionId = await getNextId(connection, 'sales_transaction', 'transaction_id');
     const [saleResult] = await connection.query(`
-      INSERT INTO sales_transaction (transaction_id, customer_id, grand_total, transaction_date, payment_type_id)
-      VALUES (?, ?, ?, NOW(), ?)
-    `, [transactionId, req.user.id, Math.round(grand_total), payTypeId]);
+      INSERT INTO sales_transaction (transaction_id, customer_id, grand_total, total_items, transaction_date, payment_type_id)
+      VALUES (?, ?, ?, ?, NOW(), ?)
+    `, [transactionId, req.user.id, finalGrandTotal, totalItems, chosenPaymentType]);
 
     for (const row of detailRows) {
       await connection.query(`
@@ -216,7 +213,7 @@ router.post('/orders', async (req, res) => {
     await connection.query(`
       INSERT INTO payment (payment_id, transaction_id, payment_method, amount_paid, payment_date, payment_status)
       VALUES (?, ?, ?, ?, NOW(), 'Completed')
-    `, [paymentId, transactionId, payment_method, grand_total]);
+    `, [paymentId, transactionId, payment_method, finalGrandTotal]);
 
     await connection.commit();
     res.status(201).json({ message: 'Order placed successfully', transaction_id: transactionId, grand_total });

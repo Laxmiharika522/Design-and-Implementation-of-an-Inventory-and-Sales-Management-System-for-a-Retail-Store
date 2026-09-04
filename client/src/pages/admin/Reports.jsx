@@ -1,21 +1,26 @@
 import { useQuery } from '@tanstack/react-query';
 import axios from 'axios';
 import { 
-  BarChart3, 
   TrendingUp, 
   ShoppingBag, 
-  User, 
   Calendar, 
-  IndianRupee, 
   ChevronDown, 
   ChevronUp, 
-  ExternalLink,
-  Globe
+  Globe,
+  CreditCard,
+  Search,
+  Filter,
+  Receipt,
+  IndianRupee,
+  FileText
 } from 'lucide-react';
 import { useState, Fragment } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 
 export default function Reports() {
   const [expandedRow, setExpandedRow] = useState(null);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [channelFilter, setChannelFilter] = useState('All'); // 'All' | 'POS' | 'Online'
 
   const { data, isLoading } = useQuery({
     queryKey: ['adminReportsSales'],
@@ -27,151 +32,265 @@ export default function Reports() {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+      <div className="flex flex-col items-center justify-center h-64 text-slate-400 font-medium">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-rose-600 mb-2"></div>
+        <span className="text-xs font-semibold">Loading sales analytics...</span>
       </div>
     );
   }
 
   const { sales = [], totalStoreEarnings = 0 } = data || {};
 
+  // Filter sales list based on search and channel tab
+  const filteredSales = sales.filter(sale => {
+    const txnIdStr = sale.transaction_id.toString().padStart(6, '0');
+    const nameStr = (sale.is_online ? sale.customer?.name : sale.employee?.name) || '';
+    const matchesSearch = txnIdStr.includes(searchTerm) || nameStr.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    if (!matchesSearch) return false;
+    if (channelFilter === 'POS') return !sale.is_online;
+    if (channelFilter === 'Online') return sale.is_online;
+    return true;
+  });
+
+  const totalTransactionsCount = filteredSales.length;
+
   return (
-    <div className="space-y-8 animate-in fade-in duration-500">
-      {/* Header & Stats Summary */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="col-span-1 md:col-span-2">
-          <h2 className="text-3xl font-black text-slate-800 dark:text-white tracking-tight">Sales Analytics</h2>
-          <p className="text-slate-500 mt-2 font-medium">Comprehensive breakdown of all store and online transactions.</p>
-        </div>
-        <div className="card bg-gradient-to-br from-blue-600 to-indigo-700 text-white p-6 shadow-xl shadow-blue-500/20 border-0 relative overflow-hidden group">
-          <div className="absolute -right-4 -top-4 w-24 h-24 bg-white/10 rounded-full blur-2xl group-hover:scale-150 transition-transform duration-700"></div>
-          <p className="text-blue-100 text-sm font-bold uppercase tracking-wider">Total Store Earnings</p>
-          <div className="mt-2 flex items-baseline gap-2">
-            <span className="text-4xl font-black italic">₹{totalStoreEarnings.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+    <div className="space-y-5 pb-8 max-w-7xl mx-auto">
+      {/* Top Header & Revenue Summary Card */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        {/* Title Block */}
+        <div className="md:col-span-2 bg-white p-4 sm:p-5 rounded-xl border border-slate-200/80 shadow-2xs flex flex-col justify-center">
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-rose-600 to-red-600 text-white shadow-xs flex items-center justify-center font-bold">
+              <FileText size={17} />
+            </div>
+            <h1 className="text-xl md:text-2xl font-extrabold text-slate-900 tracking-tight">Sales Analytics</h1>
           </div>
-          <div className="mt-4 flex items-center gap-2 text-blue-100 text-xs font-bold">
-            <TrendingUp size={14} />
-            <span>Cumulative across all channels</span>
+          <p className="text-slate-500 text-xs font-semibold uppercase tracking-wider mt-1 ml-10">
+            Comprehensive audit & financial breakdown of all store transactions
+          </p>
+        </div>
+
+        {/* Total Store Earnings Summary Card */}
+        <div className="bg-white p-4 rounded-xl border border-slate-200/80 shadow-2xs flex items-center justify-between">
+          <div>
+            <p className="text-[10px] font-extrabold uppercase tracking-wider text-rose-600 mb-0.5">Total Store Earnings</p>
+            <p className="text-2xl font-black text-slate-900 tracking-tight">
+              ₹{totalStoreEarnings.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            </p>
+            <p className="text-[11px] font-semibold text-slate-500 mt-1 flex items-center gap-1">
+              <TrendingUp size={13} className="text-emerald-600" /> Cumulative revenue across all channels
+            </p>
+          </div>
+          <div className="w-11 h-11 rounded-xl bg-rose-50 text-rose-600 border border-rose-100 flex items-center justify-center shrink-0">
+            <IndianRupee size={22} />
           </div>
         </div>
       </div>
 
+      {/* Toolbar Controls: Search & Channel Filter */}
+      <div className="bg-white p-3.5 rounded-xl border border-slate-200/80 shadow-2xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        {/* Channel Filter Tabs */}
+        <div className="flex items-center gap-1.5 bg-slate-100/90 p-1 rounded-lg">
+          {['All', 'POS', 'Online'].map(tab => (
+            <button
+              key={tab}
+              onClick={() => setChannelFilter(tab)}
+              className={`px-3 py-1 rounded-md text-xs font-bold transition-all ${
+                channelFilter === tab
+                  ? 'bg-white text-rose-700 shadow-2xs'
+                  : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              {tab === 'All' ? 'All Transactions' : tab === 'POS' ? 'In-Store POS' : 'Online Orders'}
+            </button>
+          ))}
+        </div>
+
+        {/* Search Input */}
+        <div className="relative w-full sm:w-64">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={15} />
+          <input
+            type="text"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            placeholder="Search Txn # or Name..."
+            className="w-full pl-9 pr-3 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs font-medium focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-400 transition-all placeholder:text-slate-400"
+          />
+        </div>
+      </div>
+
       {/* Detailed Sales Table */}
-      <div className="card border dark:border-slate-700 overflow-hidden shadow-sm bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm">
+      <div className="bg-white rounded-xl border border-slate-200/80 overflow-hidden shadow-2xs">
         <div className="overflow-x-auto">
-          <table className="w-full text-left text-sm border-collapse">
+          <table className="w-full text-left text-xs border-collapse">
             <thead>
-              <tr className="bg-slate-50/50 dark:bg-slate-800/50 border-b dark:border-slate-700">
-                <th className="px-6 py-4 font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider text-[10px]">ID & Date</th>
-                <th className="px-6 py-4 font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider text-[10px]">Source & Channel</th>
-                <th className="px-6 py-4 font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider text-[10px]">Details</th>
-                <th className="px-6 py-4 font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider text-[10px] text-right">Financing</th>
-                <th className="px-6 py-4 font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider text-[10px] text-right">Grand Total</th>
+              <tr className="bg-slate-50/90 border-b border-slate-200/90 text-[10px] font-extrabold uppercase text-slate-500 tracking-wider">
+                <th className="px-4 py-3">ID & Date</th>
+                <th className="px-4 py-3">Source & Channel</th>
+                <th className="px-4 py-3 text-center">Items</th>
+                <th className="px-4 py-3 text-right">Breakdown</th>
+                <th className="px-4 py-3 text-right">Grand Total</th>
+                <th className="px-4 py-3 text-center">Action</th>
               </tr>
             </thead>
-            <tbody className="divide-y dark:divide-slate-800 text-slate-700 dark:text-slate-300">
-              {sales.map((sale) => (
-                <Fragment key={sale.transaction_id}>
-                  <tr 
-                    onClick={() => setExpandedRow(expandedRow === sale.transaction_id ? null : sale.transaction_id)}
-                    className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors cursor-pointer group"
-                  >
-                    <td className="px-6 py-5">
-                      <div className="font-bold text-slate-900 dark:text-white">#{sale.transaction_id.toString().padStart(6, '0')}</div>
-                      <div className="text-[11px] text-slate-400 font-medium flex items-center gap-1 mt-1">
-                        <Calendar size={12} /> {new Date(sale.transaction_date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}
-                      </div>
-                    </td>
-                    <td className="px-6 py-5">
-                      {sale.is_online ? (
-                        <div className="flex flex-col gap-1">
-                          <span className="badge bg-green-100 text-green-700 border-green-200 self-start flex items-center gap-1">
-                            <Globe size={10} /> Online Purchase
-                          </span>
-                          <div className="text-xs font-bold text-slate-900 dark:text-white mt-1 uppercase tracking-tight">{sale.customer?.name}</div>
-                          <div className="text-[10px] text-slate-400 lowercase">{sale.customer?.email}</div>
-                        </div>
-                      ) : (
-                        <div className="flex flex-col gap-1">
-                          <span className="badge bg-blue-100 text-blue-700 border-blue-200 self-start flex items-center gap-1">
-                            <ShoppingBag size={10} /> POS In-Store
-                          </span>
-                          <div className="text-xs font-bold text-slate-900 dark:text-white mt-1 uppercase tracking-tight">{sale.employee?.name}</div>
-                          <div className="text-[10px] text-slate-400">{sale.employee?.role}</div>
-                        </div>
-                      )}
-                    </td>
-                    <td className="px-6 py-5">
-                      <div className="flex items-center gap-2">
-                        <span className="text-xs font-bold bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-md text-slate-600 dark:text-slate-400">
-                          {sale.items?.length || 0} {sale.items?.length === 1 ? 'Item' : 'Items'}
-                        </span>
-                        {expandedRow === sale.transaction_id ? <ChevronUp size={16} className="text-slate-400" /> : <ChevronDown size={16} className="text-slate-400" />}
-                      </div>
-                    </td>
-                    <td className="px-6 py-5 text-right font-medium">
-                      <div className="text-[11px] text-slate-500 space-y-0.5">
-                        <p>Subtotal: ₹{Number(sale.subtotal || 0).toFixed(2)}</p>
-                        <p>Tax: ₹{Number(sale.tax_amount || 0).toFixed(2)}</p>
-                        <p>Fees: ₹{Number(sale.processing_fee || 0).toFixed(2)}</p>
-                      </div>
-                    </td>
-                    <td className="px-6 py-5 text-right">
-                      <div className="text-lg font-black text-slate-900 dark:text-white">₹{Number(sale.grand_total || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</div>
-                    </td>
-                  </tr>
-                  
-                  {expandedRow === sale.transaction_id && (
-                    <tr className="bg-slate-50/50 dark:bg-slate-800/30">
-                      <td colSpan="5" className="px-8 py-6">
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                          <div className="space-y-3">
-                            <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-400">Order Breakdown</h4>
-                            <div className="divide-y dark:divide-slate-700 bg-white dark:bg-slate-900 rounded-2xl border dark:border-slate-800 shadow-sm overflow-hidden">
-                              {sale.items?.map((item, idx) => (
-                                <div key={idx} className="p-3 flex justify-between items-center text-xs">
-                                  <div>
-                                    <p className="font-bold text-slate-800 dark:text-slate-200">{item.product_name}</p>
-                                    <p className="text-[10px] text-slate-400 font-medium">
-                                      {item.quantity} x ₹{Number(item.unit_price || 0).toFixed(2)} (+{item.tax_rate}% Tax)
-                                    </p>
-                                  </div>
-                                  <p className="font-black text-slate-900 dark:text-white">₹{Number(item.line_total || 0).toFixed(2)}</p>
-                                </div>
-                              ))}
-                            </div>
-                          </div>
-                          <div className="space-y-3">
-                            <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-400">Tax & Fees Summary</h4>
-                            <div className="p-4 bg-white dark:bg-slate-900 rounded-2xl border dark:border-slate-800 shadow-sm space-y-3 text-xs">
-                              <div className="flex justify-between font-medium">
-                                <span className="text-slate-500">Subtotal</span>
-                                <span className="text-slate-900 dark:text-white">₹{Number(sale.subtotal || 0).toFixed(2)}</span>
-                              </div>
-                              <div className="flex justify-between font-medium">
-                                <span className="text-slate-500">Calculated GST</span>
-                                <span className="text-slate-900 dark:text-white">₹{Number(sale.tax_amount || 0).toFixed(2)}</span>
-                              </div>
-                              <div className="flex justify-between font-medium">
-                                <span className="text-slate-500">Processing Fee</span>
-                                <span className="text-slate-900 dark:text-white">₹{Number(sale.processing_fee || 0).toFixed(2)}</span>
-                              </div>
-                              <div className="pt-3 border-t dark:border-slate-700 flex justify-between font-black text-sm">
-                                <span className="text-slate-800 dark:text-white">Total Amount</span>
-                                <span className="text-blue-600">₹{Number(sale.grand_total || 0).toFixed(2)}</span>
-                              </div>
-                            </div>
-                          </div>
+            <tbody className="divide-y divide-slate-100 font-medium text-slate-800">
+              {filteredSales.map((sale) => {
+                const isExpanded = expandedRow === sale.transaction_id;
+                const formattedId = sale.transaction_id.toString().padStart(6, '0');
+                const personName = sale.is_online ? sale.customer?.name : sale.employee?.name;
+                const personRole = sale.is_online ? sale.customer?.email : sale.employee?.role;
+
+                return (
+                  <Fragment key={sale.transaction_id}>
+                    <tr 
+                      onClick={() => setExpandedRow(isExpanded ? null : sale.transaction_id)}
+                      className={`hover:bg-slate-50/80 transition-colors cursor-pointer ${isExpanded ? 'bg-slate-50/60' : ''}`}
+                    >
+                      {/* ID & Date */}
+                      <td className="px-4 py-3.5">
+                        <div className="font-extrabold text-slate-900 text-xs tracking-tight">#{formattedId}</div>
+                        <div className="text-[11px] text-slate-500 font-medium flex items-center gap-1 mt-0.5">
+                          <Calendar size={11} className="text-slate-400" />
+                          {new Date(sale.transaction_date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
                         </div>
                       </td>
+
+                      {/* Source & Channel */}
+                      <td className="px-4 py-3.5">
+                        <div className="flex flex-col gap-1 items-start">
+                          <div className="flex items-center gap-1.5">
+                            {sale.is_online ? (
+                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                                <Globe size={10} /> Online
+                              </span>
+                            ) : (
+                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold bg-rose-50 text-rose-700 border border-rose-200">
+                                <ShoppingBag size={10} /> POS In-Store
+                              </span>
+                            )}
+
+                            <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[10px] font-bold bg-slate-100 text-slate-700 border border-slate-200">
+                              <CreditCard size={10} className="text-slate-400" /> {sale.payment_method || 'Cash'}
+                            </span>
+                          </div>
+
+                          {personName && (
+                            <div className="mt-0.5">
+                              <span className="font-bold text-slate-900 text-xs capitalize">{personName}</span>
+                              {personRole && (
+                                <span className="text-[10px] text-slate-400 font-medium ml-1.5">({personRole})</span>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      </td>
+
+                      {/* Items Count Badge */}
+                      <td className="px-4 py-3.5 text-center">
+                        <span className="inline-block px-2.5 py-1 rounded-lg text-xs font-bold bg-slate-100 text-slate-700 border border-slate-200/70">
+                          {sale.items?.length || 0} {sale.items?.length === 1 ? 'item' : 'items'}
+                        </span>
+                      </td>
+
+                      {/* Financial Breakdown Sub-rows */}
+                      <td className="px-4 py-3.5 text-right font-medium">
+                        <div className="text-[11px] text-slate-500 space-y-0.5">
+                          <div>Subtotal: <span className="font-bold text-slate-800">₹{Number(sale.subtotal || 0).toFixed(2)}</span></div>
+                          {(Number(sale.tax_amount) > 0 || Number(sale.processing_fee) > 0) && (
+                            <div className="text-[10px] text-slate-400">
+                              Tax: ₹{Number(sale.tax_amount || 0).toFixed(2)} | Fee: ₹{Number(sale.processing_fee || 0).toFixed(2)}
+                            </div>
+                          )}
+                        </div>
+                      </td>
+
+                      {/* Grand Total */}
+                      <td className="px-4 py-3.5 text-right">
+                        <div className="text-sm font-extrabold text-slate-900">
+                          ₹{Number(sale.grand_total || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                        </div>
+                      </td>
+
+                      {/* Expand Toggle */}
+                      <td className="px-4 py-3.5 text-center">
+                        <button className="p-1 rounded-md text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors">
+                          {isExpanded ? <ChevronUp size={15} /> : <ChevronDown size={15} />}
+                        </button>
+                      </td>
                     </tr>
-                  )}
-                </Fragment>
-              ))}
-              {sales.length === 0 && (
+                    
+                    {/* Expanded Items & Breakdown Details */}
+                    {isExpanded && (
+                      <tr className="bg-slate-50/80 border-b border-slate-200">
+                        <td colSpan="6" className="p-4">
+                          <motion.div 
+                            initial={{ opacity: 0, height: 0 }}
+                            animate={{ opacity: 1, height: 'auto' }}
+                            exit={{ opacity: 0, height: 0 }}
+                            className="grid grid-cols-1 md:grid-cols-2 gap-4"
+                          >
+                            {/* Purchased Items Table */}
+                            <div className="space-y-2">
+                              <h4 className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">Itemized Purchase Breakdown</h4>
+                              <div className="divide-y divide-slate-100 bg-white rounded-xl border border-slate-200 overflow-hidden shadow-2xs">
+                                {sale.items?.map((item, idx) => (
+                                  <div key={idx} className="p-2.5 flex justify-between items-center text-xs">
+                                    <div>
+                                      <p className="font-bold text-slate-900">{item.product_name}</p>
+                                      <p className="text-[11px] text-slate-500 font-medium mt-0.5">
+                                        {item.quantity} units × ₹{Number(item.unit_price || 0).toFixed(2)} {item.tax_rate > 0 ? `(+${item.tax_rate}% Tax)` : ''}
+                                      </p>
+                                    </div>
+                                    <p className="font-extrabold text-slate-900 text-xs">
+                                      ₹{Number(item.line_total || 0).toFixed(2)}
+                                    </p>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+
+                            {/* Tax & Payment Summary Box */}
+                            <div className="space-y-2">
+                              <h4 className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">Payment Audit</h4>
+                              <div className="p-3.5 bg-white rounded-xl border border-slate-200 space-y-2 text-xs">
+                                <div className="flex justify-between text-slate-600 font-medium">
+                                  <span>Items Subtotal:</span>
+                                  <span className="font-bold text-slate-800">₹{Number(sale.subtotal || 0).toFixed(2)}</span>
+                                </div>
+                                <div className="flex justify-between text-slate-600 font-medium">
+                                  <span>Tax Amount:</span>
+                                  <span className="font-bold text-slate-800">₹{Number(sale.tax_amount || 0).toFixed(2)}</span>
+                                </div>
+                                <div className="flex justify-between text-slate-600 font-medium">
+                                  <span>Processing Fee:</span>
+                                  <span className="font-bold text-slate-800">₹{Number(sale.processing_fee || 0).toFixed(2)}</span>
+                                </div>
+                                <div className="flex justify-between text-slate-600 font-medium">
+                                  <span>Payment Method:</span>
+                                  <span className="font-extrabold text-slate-800 px-2 py-0.5 bg-slate-100 rounded-md border border-slate-200 text-[10px]">
+                                    {sale.payment_method || 'Cash'}
+                                  </span>
+                                </div>
+                                <div className="pt-2 border-t border-slate-200 flex justify-between font-extrabold text-sm">
+                                  <span className="text-slate-900">Grand Total Paid:</span>
+                                  <span className="text-rose-600">₹{Number(sale.grand_total || 0).toFixed(2)}</span>
+                                </div>
+                              </div>
+                            </div>
+                          </motion.div>
+                        </td>
+                      </tr>
+                    )}
+                  </Fragment>
+                );
+              })}
+
+              {filteredSales.length === 0 && (
                 <tr>
-                  <td colSpan="5" className="px-6 py-12 text-center text-slate-400 font-medium">
-                    No transactions found in the database.
+                  <td colSpan="6" className="px-4 py-12 text-center text-slate-400 font-medium">
+                    No transactions found.
                   </td>
                 </tr>
               )}

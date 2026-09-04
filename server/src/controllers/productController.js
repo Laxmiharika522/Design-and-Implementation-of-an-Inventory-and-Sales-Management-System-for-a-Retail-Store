@@ -4,7 +4,7 @@ export const getAllProducts = async (req, res) => {
   try {
     const [rows] = await pool.query(`
       SELECT 
-        p.product_id, p.product_name, p.barcode, p.unit_price, p.category_id, p.supplier_id, p.hsn_code, p.image_url,
+        p.product_id, p.product_name, p.barcode, p.unit_price, p.category_id, p.supplier_id, p.image_url,
         c.category_name AS 'Category.category_name',
         s.supplier_name AS 'Supplier.supplier_name',
         i.current_stock AS 'Inventory.current_stock',
@@ -24,7 +24,6 @@ export const getAllProducts = async (req, res) => {
       unit_price: row.unit_price,
       category_id: row.category_id,
       supplier_id: row.supplier_id,
-      hsn_code: row.hsn_code,
       image_url: row.image_url,
       Category: row['Category.category_name'] ? { category_name: row['Category.category_name'] } : null,
       Supplier: row['Supplier.supplier_name'] ? { supplier_name: row['Supplier.supplier_name'] } : null,
@@ -44,16 +43,16 @@ export const getAllProducts = async (req, res) => {
 export const createProduct = async (req, res) => {
   const connection = await pool.getConnection();
   try {
-    const { expiry_date, product_name, barcode, unit_price, category_id, supplier_id, hsn_code, image_url } = req.body;
+    const { expiry_date, product_name, barcode, unit_price, category_id, supplier_id, image_url } = req.body;
     
     await connection.beginTransaction();
 
     const productId = await getNextId(connection, 'product', 'product_id');
 
     const [result] = await connection.query(`
-      INSERT INTO product (product_id, product_name, barcode, unit_price, category_id, supplier_id, hsn_code, image_url)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-    `, [productId, product_name, barcode || null, unit_price, category_id, supplier_id || null, hsn_code || null, image_url || null]);
+      INSERT INTO product (product_id, product_name, barcode, unit_price, category_id, supplier_id, image_url)
+      VALUES (?, ?, ?, ?, ?, ?, ?)
+    `, [productId, product_name, barcode || null, unit_price, category_id, supplier_id || null, image_url || null]);
 
     const inventoryId = await getNextId(connection, 'inventory', 'inventory_id');
 
@@ -85,7 +84,7 @@ export const updateProduct = async (req, res) => {
   const connection = await pool.getConnection();
   try {
     const { id } = req.params;
-    const { expiry_date, product_name, barcode, unit_price, category_id, supplier_id, hsn_code, image_url } = req.body;
+    const { expiry_date, product_name, barcode, unit_price, category_id, supplier_id, image_url } = req.body;
     
     await connection.beginTransaction();
 
@@ -98,7 +97,6 @@ export const updateProduct = async (req, res) => {
     if (unit_price !== undefined) { updates.push('unit_price = ?'); values.push(unit_price); }
     if (category_id !== undefined) { updates.push('category_id = ?'); values.push(category_id); }
     if (supplier_id !== undefined) { updates.push('supplier_id = ?'); values.push(supplier_id || null); }
-    if (hsn_code !== undefined) { updates.push('hsn_code = ?'); values.push(hsn_code || null); }
     if (image_url !== undefined) { updates.push('image_url = ?'); values.push(image_url || null); }
 
     if (updates.length > 0) {
@@ -129,7 +127,7 @@ export const updateProduct = async (req, res) => {
 
     const [rows] = await pool.query(`
       SELECT 
-        p.product_id, p.product_name, p.barcode, p.unit_price, p.category_id, p.supplier_id, p.hsn_code, p.image_url,
+        p.product_id, p.product_name, p.barcode, p.unit_price, p.category_id, p.supplier_id, p.image_url,
         c.category_name AS 'Category.category_name',
         s.supplier_name AS 'Supplier.supplier_name',
         i.current_stock AS 'Inventory.current_stock',
@@ -150,7 +148,6 @@ export const updateProduct = async (req, res) => {
         unit_price: row.unit_price,
         category_id: row.category_id,
         supplier_id: row.supplier_id,
-        hsn_code: row.hsn_code,
         image_url: row.image_url,
         Category: row['Category.category_name'] ? { category_name: row['Category.category_name'] } : null,
         Supplier: row['Supplier.supplier_name'] ? { supplier_name: row['Supplier.supplier_name'] } : null,
@@ -186,15 +183,5 @@ export const deleteProduct = async (req, res) => {
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'Error deleting product' });
-  }
-};
-
-export const getHSNCodes = async (req, res) => {
-  try {
-    const [codes] = await pool.query('SELECT * FROM hsn_tax ORDER BY hsn_code ASC');
-    res.json(codes);
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: 'Error fetching HSN codes' });
   }
 };

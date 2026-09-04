@@ -37,6 +37,19 @@ async function initDB() {
     };
   }
 
+  // Create database if it doesn't exist yet
+  const dbName = connConfig.database;
+  const initConfigWithoutDB = { ...connConfig };
+  delete initConfigWithoutDB.database;
+  
+  try {
+    const rootConn = await mysql.createConnection(initConfigWithoutDB);
+    await rootConn.query(`CREATE DATABASE IF NOT EXISTS \`${dbName}\``);
+    await rootConn.end();
+  } catch (err) {
+    // Ignore if user permissions don't allow CREATE DATABASE
+  }
+
   // Create a dedicated connection with multipleStatements true
   const conn = await mysql.createConnection(connConfig);
 
@@ -55,12 +68,12 @@ async function initDB() {
     // 3. Drop all tables matching our models first to ensure a clean slate
     const tables = [
       'delivery_details', 'purchase_order_detail', 'purchase_order', 'purchase_order_status',
-      'stock_adjustment', 'product_reorder', 'inventory', 'warehouse', 'warehouse_address',
+      'stock_adjustment', 'product_reorder', 'inventory',
       'payment', 'sales_transaction_details', 'sales_transaction', 'sales_transaction_fees', 'sales_transaction_rates',
       'product_description', 'product',
       'supplier_contact', 'supplier', 'supplier_bank_details', 'supplier_address',
       'customer', 'employee', 'employee_address',
-      'category', 'hsn_tax'
+      'category'
     ];
     for (const t of tables) {
       await conn.query(`DROP TABLE IF EXISTS \`${t}\``);

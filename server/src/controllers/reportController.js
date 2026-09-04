@@ -13,12 +13,12 @@ export const getDashboardStats = async (req, res) => {
     // 3. Low stock alerts
     const [inventoryRows] = await pool.query(`
       SELECT 
-        i.inventory_id, i.product_id, i.current_stock, i.expiry_date, i.warehouse_id,
+        i.inventory_id, i.product_id, i.current_stock, i.expiry_date,
         p.product_name,
         pr.reorder_level
       FROM inventory i
       JOIN product p ON i.product_id = p.product_id
-      LEFT JOIN product_reorder pr ON i.product_id = pr.product_id AND (pr.warehouse_id = i.warehouse_id OR i.warehouse_id IS NULL)
+      LEFT JOIN product_reorder pr ON i.product_id = pr.product_id
     `);
     
     const lowStockItems = inventoryRows.filter(item => {
@@ -36,11 +36,17 @@ export const getDashboardStats = async (req, res) => {
 
     const expiringSoonItems = inventoryRows.filter(item => {
       return item.expiry_date && new Date(item.expiry_date) <= thirtyDaysFromNow && new Date(item.expiry_date) > now;
-    });
+    }).map(item => ({
+      ...item,
+      Product: { product_name: item.product_name }
+    }));
 
     const expiredItems = inventoryRows.filter(item => {
       return item.expiry_date && new Date(item.expiry_date) <= now;
-    });
+    }).map(item => ({
+      ...item,
+      Product: { product_name: item.product_name }
+    }));
 
     // 5. Recent transactions
     const [recentTransactions] = await pool.query(`
@@ -185,7 +191,7 @@ export const getDetailedSales = async (req, res) => {
           subtotal: 0,
           tax_amount: 0,
           processing_fee: 0,
-          payment_method: row.payment_method || 'Unknown',
+          payment_method: row.payment_method || row.payment_type_id || 'Cash',
           _processing_fee_rate: row.payment_processing_fee ? parseFloat(row.payment_processing_fee) / 100 : 0
         });
       }
@@ -213,12 +219,25 @@ export const getDetailedSales = async (req, res) => {
       }
     }
     
-    // Finalize fee and total calculations per transaction (only for sub-breakdown)
+    // Finalize fee, delivery charges, and total calculations per transaction (only for sub-breakdown)
     const detailedSales = Array.from(salesMap.values()).map(sale => {
-      // The grand_total is already set from the DB in the first pass
-      // We calculate processing_fee from the subtotal+tax for the breakdown view
-      const processingFee = (sale.subtotal + sale.tax_amount) * sale._processing_fee_rate;
+      // Calculate delivery fee for online customer orders (FREE for ₹499+, flat ₹40 below ₹499)
+      const deliveryFee = (sale.is_online && sale.subtotal > 0 && sale.subtotal < 499) ? 40 : 0;
+      sale.delivery_fee = deliveryFee;
+
+      // Calculate processing_fee based on payment method
+      const feeRatesMap = {
+        'Cash': 0.00,
+        'UPI': 0.005,
+        'Debit Card': 0.01,
+        'Credit Card': 0.02,
+        'Net Banking': 0.015,
+        'Online': 0.005
+      };
+      let feeRate = sale._processing_fee_rate || feeRatesMap[sale.payment_method] || 0;
+      const processingFee = (sale.subtotal + sale.tax_amount) * feeRate;
       sale.processing_fee = processingFee;
+      sale.processing_fee_percent = parseFloat((feeRate * 100).toFixed(2));
       delete sale._processing_fee_rate;
       return sale;
     });

@@ -91,14 +91,14 @@ export const createSale = async (req, res) => {
     `, [transactionId, customer_id || null, employee_id]);
 
     for (const item of items) {
-      const line_total = (item.quantity_sold * item.unit_price) + (item.tax || 0);
+      const line_total = item.quantity_sold * item.unit_price;
       total_items += Number(item.quantity_sold);
       grand_total += line_total;
 
       await connection.query(`
         INSERT INTO sales_transaction_details (transaction_id, product_id, quantity_sold, unit_price, tax, tax_category, line_total)
-        VALUES (?, ?, ?, ?, ?, ?, ?)
-      `, [transactionId, item.product_id, item.quantity_sold, item.unit_price, item.tax || 0, item.tax_category || 'GST_5', line_total]);
+        VALUES (?, ?, ?, ?, 0, 'STANDARD', ?)
+      `, [transactionId, item.product_id, item.quantity_sold, item.unit_price, line_total]);
 
       await connection.query(`
         UPDATE inventory 
