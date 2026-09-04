@@ -1,5 +1,6 @@
 import pool from '../config/db.js';
 import { getNextId } from '../utils/dbUtils.js';
+
 export const getAllInventory = async (req, res) => {
   try {
     const [rows] = await pool.query(`
@@ -9,7 +10,7 @@ export const getAllInventory = async (req, res) => {
         pr.reorder_level
       FROM inventory i
       LEFT JOIN product p ON i.product_id = p.product_id
-      LEFT JOIN product_reorder pr ON p.product_id = pr.product_id AND i.warehouse_id = pr.warehouse_id
+      LEFT JOIN product_reorder pr ON p.product_id = pr.product_id
     `);
 
     const result = rows.map(row => {
@@ -67,7 +68,7 @@ export const adjustStock = async (req, res) => {
     
     // Create stock adjustment
     const adjId = await getNextId(connection, 'stock_adjustment', 'adjustment_id');
-    const [adjResult] = await connection.query(`
+    await connection.query(`
       INSERT INTO stock_adjustment (adjustment_id, product_id, employee_id, adjustment_type, quantity_adjusted, reason, adjustment_date)
       VALUES (?, ?, ?, ?, ?, ?, NOW())
     `, [adjId, product_id, employee_id, adjustment_type, quantity_adjusted, reason || null]);
@@ -89,19 +90,19 @@ export const adjustStock = async (req, res) => {
 
 export const updateReorderLevel = async (req, res) => {
   try {
-    const { product_id, warehouse_id, reorder_level } = req.body;
-    console.log(`Updating reorder level: Product ${product_id}, Warehouse ${warehouse_id}, Level ${reorder_level}`);
+    const { product_id, reorder_level } = req.body;
+    console.log(`Updating reorder level: Product ${product_id}, Level ${reorder_level}`);
     
     // ON DUPLICATE KEY UPDATE handles findOrCreate securely in raw MySQL
     await pool.query(`
-      INSERT INTO product_reorder (product_id, warehouse_id, reorder_level)
-      VALUES (?, ?, ?)
+      INSERT INTO product_reorder (product_id, reorder_level)
+      VALUES (?, ?)
       ON DUPLICATE KEY UPDATE reorder_level = VALUES(reorder_level)
-    `, [product_id, warehouse_id, reorder_level]);
+    `, [product_id, reorder_level]);
 
     const [reorder] = await pool.query(
-      'SELECT * FROM product_reorder WHERE product_id = ? AND warehouse_id = ?', 
-      [product_id, warehouse_id]
+      'SELECT * FROM product_reorder WHERE product_id = ?', 
+      [product_id]
     );
 
     res.json({ message: 'Reorder level updated successfully', reorder: reorder[0] });

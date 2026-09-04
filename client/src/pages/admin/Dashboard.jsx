@@ -325,8 +325,7 @@ export default function Dashboard() {
                             {idx + 1}
                           </div>
                           <div>
-                            <p className="font-black text-slate-900 dark:text-white uppercase tracking-tight antialiased">{item.Product?.product_name || `Product #${item.product_id}`}</p>
-                            <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">WH-REGION: {item.warehouse_id}</p>
+                            <p className="font-black text-slate-900 dark:text-white uppercase tracking-tight antialiased">{item.Product?.product_name || item.product_name || `Product #${item.product_id}`}</p>
                           </div>
                         </div>
                         <div className="text-right">

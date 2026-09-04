@@ -18,6 +18,10 @@ CREATE TABLE `purchase_order` (
   `total_amount` decimal(12,2) NOT NULL DEFAULT '0.00',
   `status` varchar(50) NOT NULL DEFAULT 'Pending',
   `delivery_date` date DEFAULT NULL,
+  `payment_status` varchar(50) DEFAULT 'Unpaid',
+  `amount_paid` decimal(12,2) DEFAULT '0.00',
+  `payment_method` varchar(50) DEFAULT NULL,
+  `notes` text DEFAULT NULL,
   PRIMARY KEY (`po_id`),
   CONSTRAINT `fk_po_supplier` FOREIGN KEY (`supplier_id`) REFERENCES `supplier` (`supplier_id`) ON DELETE CASCADE ON UPDATE CASCADE,
   CONSTRAINT `fk_po_status` FOREIGN KEY (`status`) REFERENCES `purchase_order_status` (`status`) ON DELETE CASCADE ON UPDATE CASCADE
@@ -29,6 +33,7 @@ CREATE TABLE `purchase_order_detail` (
   `po_id` int NOT NULL,
   `product_id` int NOT NULL,
   `quantity_ordered` int NOT NULL,
+  `unit_price` decimal(10,2) DEFAULT '0.00',
   `batch_no` varchar(50) DEFAULT NULL,
   PRIMARY KEY (`po_id`,`product_id`),
   CONSTRAINT `fk_pod_po` FOREIGN KEY (`po_id`) REFERENCES `purchase_order` (`po_id`) ON DELETE CASCADE ON UPDATE CASCADE,
