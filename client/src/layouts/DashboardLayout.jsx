@@ -10,6 +10,7 @@ import {
   Menu, Bell, ChevronLeft, ChevronRight, User, Truck, Tag
 } from 'lucide-react';
 import clsx from 'clsx';
+import { API_BASE } from '../config/api';
 
 export const ProtectedRoute = ({ roles, children }) => {
   const { user, token } = useAuth();
@@ -32,7 +33,7 @@ export const DashboardLayout = () => {
 
   const { data: alertsData } = useQuery({
     queryKey: ['dashboard-alerts'],
-    queryFn: async () => (await axios.get(import.meta.env.VITE_API_URL + '/reports/alerts')).data,
+    queryFn: async () => (await axios.get(API_BASE + '/reports/alerts')).data,
     refetchInterval: 60000 // refresh every minute
   });
 

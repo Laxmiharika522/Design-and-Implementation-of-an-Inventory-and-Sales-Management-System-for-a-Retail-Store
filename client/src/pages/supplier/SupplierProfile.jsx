@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import axios from 'axios';
 import { useAuth } from '../../context/AuthContext';
 import { User, Mail, MapPin, Phone, Building2, Save, Plus, Trash2, CheckCircle2, Loader2, X, Clock } from 'lucide-react';
+import { API_BASE } from '../../config/api';
 
 export default function SupplierProfile() {
   const queryClient = useQueryClient();
@@ -27,7 +28,7 @@ export default function SupplierProfile() {
     queryKey: ['supplierProfile'],
     queryFn: () =>
       axios
-        .get(import.meta.env.VITE_API_URL + '/supplier/profile', {
+        .get(API_BASE + '/supplier/profile', {
           headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
         })
         .then(r => r.data)
@@ -51,7 +52,7 @@ export default function SupplierProfile() {
 
   const updateProfile = useMutation({
     mutationFn: (data) => axios.put(
-      import.meta.env.VITE_API_URL + '/supplier/profile',
+      API_BASE + '/supplier/profile',
       data,
       { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
     ),
@@ -77,7 +78,7 @@ export default function SupplierProfile() {
   const addPhone = useMutation({
     mutationFn: (phone) =>
       axios.post(
-        import.meta.env.VITE_API_URL + '/supplier/profile/phone',
+        API_BASE + '/supplier/profile/phone',
         { phone },
         { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
       ),
@@ -98,7 +99,7 @@ export default function SupplierProfile() {
   const removePhone = useMutation({
     mutationFn: (phone) =>
       axios.delete(
-        `${import.meta.env.VITE_API_URL}/supplier/profile/phone/${phone}`,
+        `${API_BASE}/supplier/profile/phone/${phone}`,
         { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
       ),
     onSuccess: async () => {

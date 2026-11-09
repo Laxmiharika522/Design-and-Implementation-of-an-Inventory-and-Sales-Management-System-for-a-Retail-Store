@@ -9,6 +9,7 @@ import { Line } from 'react-chartjs-2';
 import { TrendingUp, ShoppingCart, AlertTriangle, Activity, CreditCard, X, Calendar, Package } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Link } from 'react-router-dom';
+import { API_BASE } from '../../config/api';
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, BarElement, Title, Tooltip, Legend, Filler);
 
@@ -19,7 +20,7 @@ export default function Dashboard() {
   const { data: stats, isLoading } = useQuery({
     queryKey: ['dashboardStats', period],
     queryFn: async () => {
-      const { data } = await axios.get(`${import.meta.env.VITE_API_URL}/reports/dashboard?period=${period}`, {
+      const { data } = await axios.get(`${API_BASE}/reports/dashboard?period=${period}`, {
         headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
       });
       return data;

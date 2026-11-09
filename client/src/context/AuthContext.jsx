@@ -1,6 +1,7 @@
 import { createContext, useState, useEffect, useContext } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
+import { API_BASE } from '../config/api';
 
 const AuthContext = createContext();
 
@@ -17,8 +18,6 @@ export const AuthProvider = ({ children }) => {
       setLoading(false);
     }
   }, [token]);
-
-  const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
   const fetchUser = async () => {
     try {

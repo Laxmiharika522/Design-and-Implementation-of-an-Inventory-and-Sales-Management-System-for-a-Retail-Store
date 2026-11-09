@@ -2,6 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { ClipboardList, Package, CreditCard, CheckCircle2, MapPin, Receipt, ArrowLeft, ShoppingCart, ShieldCheck, Printer } from 'lucide-react';
+import { API_BASE } from '../../config/api';
 
 const paymentColors = {
   Cash: 'bg-emerald-100 text-emerald-800 border-emerald-200',
@@ -14,8 +15,6 @@ const paymentColors = {
 
 export default function CustomerOrders() {
   const navigate = useNavigate();
-
-  const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
   const { data: orders = [], isLoading } = useQuery({
     queryKey: ['customerOrders'],

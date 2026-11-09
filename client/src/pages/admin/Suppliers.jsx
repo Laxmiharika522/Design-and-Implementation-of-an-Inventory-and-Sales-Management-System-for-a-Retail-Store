@@ -8,8 +8,7 @@ import {
   ChevronRight, X, Eye, Printer, FileText, ArrowRight, ShieldCheck
 } from 'lucide-react';
 import InvoiceModal from '../../components/InvoiceModal';
-
-const API_BASE = import.meta.env.VITE_API_URL;
+import { API_BASE } from '../../config/api';
 const getAuthHeaders = () => ({
   headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
 });

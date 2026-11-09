@@ -6,6 +6,7 @@ import { LogOut, Truck, ClipboardList, User, ChevronLeft, ChevronRight, Package,
 import clsx from 'clsx';
 import { useQuery } from '@tanstack/react-query';
 import axios from 'axios';
+import { API_BASE } from '../config/api';
 
 export const SupplierProtectedRoute = () => {
   const { user, token } = useAuth();
@@ -29,7 +30,7 @@ export const SupplierLayout = () => {
     queryKey: ['supplierProfile'],
     queryFn: () =>
       axios
-        .get(import.meta.env.VITE_API_URL + '/supplier/profile', {
+        .get(API_BASE + '/supplier/profile', {
           headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
         })
         .then(r => r.data),

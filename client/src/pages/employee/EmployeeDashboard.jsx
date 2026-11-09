@@ -5,6 +5,7 @@ import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import clsx from 'clsx';
+import { API_BASE } from '../../config/api';
 
 export default function EmployeeDashboard() {
   const { user } = useAuth();
@@ -12,7 +13,7 @@ export default function EmployeeDashboard() {
   const { data: stats, isLoading } = useQuery({
     queryKey: ['employeeStats'],
     queryFn: async () => {
-      const { data } = await axios.get(import.meta.env.VITE_API_URL + '/reports/employee-stats', {
+      const { data } = await axios.get(API_BASE + '/reports/employee-stats', {
         headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
       });
       return data;

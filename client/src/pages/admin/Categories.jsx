@@ -4,6 +4,7 @@ import axios from 'axios';
 import { Search, Plus, Edit2, Trash2, X, Tag } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import clsx from 'clsx';
+import { API_BASE } from '../../config/api';
 
 export default function Categories() {
   const { user } = useAuth();
@@ -19,15 +20,15 @@ export default function Categories() {
 
   const { data: categories, isLoading } = useQuery({
     queryKey: ['categories'],
-    queryFn: async () => (await axios.get(import.meta.env.VITE_API_URL + '/categories')).data
+    queryFn: async () => (await axios.get(API_BASE + '/categories')).data
   });
 
   const saveMutation = useMutation({
     mutationFn: async (data) => {
       if (editingCategory) {
-        return (await axios.put(`${import.meta.env.VITE_API_URL}/categories/${editingCategory.category_id}`, data)).data;
+        return (await axios.put(`${API_BASE}/categories/${editingCategory.category_id}`, data)).data;
       }
-      return (await axios.post(import.meta.env.VITE_API_URL + '/categories', data)).data;
+      return (await axios.post(API_BASE + '/categories', data)).data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries(['categories']);
@@ -37,7 +38,7 @@ export default function Categories() {
   });
 
   const deleteMutation = useMutation({
-    mutationFn: async (id) => await axios.delete(`${import.meta.env.VITE_API_URL}/categories/${id}`),
+    mutationFn: async (id) => await axios.delete(`${API_BASE}/categories/${id}`),
     onSuccess: () => queryClient.invalidateQueries(['categories']),
     onError: (err) => alert('Error: ' + (err.response?.data?.message || err.message))
   });

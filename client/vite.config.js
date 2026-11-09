@@ -8,6 +8,15 @@ export default defineConfig({
     react(),
     tailwindcss(),
   ],
+  server: {
+    port: 5173,
+    proxy: {
+      '/api': {
+        target: process.env.VITE_DEV_BACKEND_URL || 'http://localhost:5000',
+        changeOrigin: true,
+      }
+    }
+  },
   build: {
     chunkSizeWarningLimit: 1000, // Increased to 1000kB to accommodate large vendor/UI bundles. Monitor bundle sizes regularly.
     rollupOptions: {

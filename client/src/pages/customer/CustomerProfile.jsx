@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import axios from 'axios';
 import { User, Mail, Phone, MapPin, Lock, Save, Loader2, CheckCircle2, ShieldCheck } from 'lucide-react';
+import { API_BASE } from '../../config/api';
 
 export default function CustomerProfile() {
   const queryClient = useQueryClient();
@@ -13,8 +14,6 @@ export default function CustomerProfile() {
     password: ''
   });
   const [success, setSuccess] = useState(false);
-
-  const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
   const { data: profile, isLoading } = useQuery({
     queryKey: ['customerProfile'],

@@ -8,6 +8,7 @@ import {
   Calendar, MapPin, Loader2, Sparkles, Tag, ShieldCheck, 
   Truck, Zap, Percent, Clock, ChevronRight
 } from 'lucide-react';
+import { API_BASE } from '../../config/api';
 
 export default function CustomerShop() {
   const [search, setSearch] = useState('');
@@ -18,8 +19,6 @@ export default function CustomerShop() {
   const [isPaying, setIsPaying] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState('UPI');
   const [currentSlide, setCurrentSlide] = useState(0);
-
-  const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
   const { data: products = [], isLoading: productsLoading } = useQuery({
     queryKey: ['customerProducts'],

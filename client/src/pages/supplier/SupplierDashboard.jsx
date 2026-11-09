@@ -7,18 +7,19 @@ import {
   ClipboardList, IndianRupee, XCircle, ChevronRight,
   Calendar, ShoppingBag, ArrowUpRight, User
 } from 'lucide-react';
+import { API_BASE } from '../../config/api';
 
 export default function SupplierDashboard() {
   const navigate = useNavigate();
 
   const { data: stats } = useQuery({
     queryKey: ['supplierStats'],
-    queryFn: () => axios.get(import.meta.env.VITE_API_URL + '/supplier/stats').then(r => r.data)
+    queryFn: () => axios.get(API_BASE + '/supplier/stats').then(r => r.data)
   });
 
   const { data: orders = [] } = useQuery({
     queryKey: ['supplierOrders'],
-    queryFn: () => axios.get(import.meta.env.VITE_API_URL + '/supplier/orders').then(r => r.data)
+    queryFn: () => axios.get(API_BASE + '/supplier/orders').then(r => r.data)
   });
 
   const recentOrders = orders.slice(0, 5);

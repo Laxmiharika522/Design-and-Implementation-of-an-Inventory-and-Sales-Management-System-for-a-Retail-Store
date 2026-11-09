@@ -7,8 +7,8 @@ import {
   User, Phone, Calendar, ArrowLeft, ShieldCheck 
 } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { API_BASE } from '../../config/api';
 
-const API_BASE = import.meta.env.VITE_API_URL;
 const getAuthHeaders = () => ({
   headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
 });

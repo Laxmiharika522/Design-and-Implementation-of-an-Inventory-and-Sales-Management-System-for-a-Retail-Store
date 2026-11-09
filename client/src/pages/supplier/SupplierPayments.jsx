@@ -4,13 +4,14 @@ import axios from 'axios';
 import { IndianRupee, CheckCircle, Clock, Loader2, CreditCard, FileText } from 'lucide-react';
 import { motion } from 'framer-motion';
 import InvoiceModal from '../../components/InvoiceModal';
+import { API_BASE } from '../../config/api';
 
 export default function SupplierPayments() {
   const [selectedInvoice, setSelectedInvoice] = useState(null);
 
   const { data: payments = [], isLoading } = useQuery({
     queryKey: ['supplierPayments'],
-    queryFn: () => axios.get(import.meta.env.VITE_API_URL + '/supplier/payments', {
+    queryFn: () => axios.get(API_BASE + '/supplier/payments', {
       headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
     }).then(r => r.data)
   });

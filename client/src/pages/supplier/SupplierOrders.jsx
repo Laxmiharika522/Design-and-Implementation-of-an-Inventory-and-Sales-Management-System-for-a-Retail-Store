@@ -10,8 +10,8 @@ import {
 } from 'lucide-react';
 
 import InvoiceModal from '../../components/InvoiceModal';
+import { API_BASE } from '../../config/api';
 
-const API_BASE = import.meta.env.VITE_API_URL;
 const getAuthHeaders = () => ({
   headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
 });

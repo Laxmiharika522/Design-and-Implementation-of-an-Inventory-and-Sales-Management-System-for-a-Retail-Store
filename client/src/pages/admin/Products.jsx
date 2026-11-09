@@ -4,6 +4,7 @@ import axios from 'axios';
 import { Search, Plus, Edit2, Trash2, X, Image as ImageIcon, Calendar } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import clsx from 'clsx';
+import { API_BASE } from '../../config/api';
 
 export default function Products() {
   const { user } = useAuth();
@@ -25,18 +26,18 @@ export default function Products() {
   // Fetch Queries
   const { data: products, isLoading } = useQuery({
     queryKey: ['products'],
-    queryFn: async () => (await axios.get(import.meta.env.VITE_API_URL + '/products', getHeaders())).data
+    queryFn: async () => (await axios.get(API_BASE + '/products', getHeaders())).data
   });
-  const { data: categories } = useQuery({ queryKey: ['categories'], queryFn: async () => (await axios.get(import.meta.env.VITE_API_URL + '/categories', getHeaders())).data });
-  const { data: suppliers } = useQuery({ queryKey: ['suppliers'], queryFn: async () => (await axios.get(import.meta.env.VITE_API_URL + '/suppliers', getHeaders())).data });
+  const { data: categories } = useQuery({ queryKey: ['categories'], queryFn: async () => (await axios.get(API_BASE + '/categories', getHeaders())).data });
+  const { data: suppliers } = useQuery({ queryKey: ['suppliers'], queryFn: async () => (await axios.get(API_BASE + '/suppliers', getHeaders())).data });
 
   // Mutations
   const saveMutation = useMutation({
     mutationFn: async (newProduct) => {
       if (editingProduct) {
-        return await axios.put(`${import.meta.env.VITE_API_URL}/products/${editingProduct.product_id}`, newProduct, getHeaders());
+        return await axios.put(`${API_BASE}/products/${editingProduct.product_id}`, newProduct, getHeaders());
       }
-      return await axios.post(import.meta.env.VITE_API_URL + '/products', newProduct, getHeaders());
+      return await axios.post(API_BASE + '/products', newProduct, getHeaders());
     },
     onSuccess: () => {
       queryClient.invalidateQueries(['products']);
@@ -49,7 +50,7 @@ export default function Products() {
   });
 
   const deleteMutation = useMutation({
-    mutationFn: async (id) => await axios.delete(`${import.meta.env.VITE_API_URL}/products/${id}`, getHeaders()),
+    mutationFn: async (id) => await axios.delete(`${API_BASE}/products/${id}`, getHeaders()),
     onSuccess: () => queryClient.invalidateQueries(['products'])
   });
 
