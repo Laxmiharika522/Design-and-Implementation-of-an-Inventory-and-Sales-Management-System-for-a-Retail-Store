@@ -6,8 +6,8 @@
 FROM node:20-alpine AS deps
 WORKDIR /app
 
-COPY package*.json ./
-RUN npm ci --omit=dev
+COPY server/package*.json ./
+RUN npm install --omit=dev
 
 FROM node:20-alpine AS runner
 WORKDIR /app
@@ -19,10 +19,10 @@ RUN apk add --no-cache curl
 RUN addgroup -S appgroup && adduser -S appuser -G appgroup
 
 COPY --from=deps /app/node_modules ./node_modules
-COPY package.json ./
-COPY src ./src
-COPY init_db.js ./
-COPY seed_all_products.js ./
+COPY server/package.json ./
+COPY server/src ./src
+COPY server/init_db.js ./
+COPY server/seed_all_products.js ./
 
 RUN chown -R appuser:appgroup /app
 USER appuser
