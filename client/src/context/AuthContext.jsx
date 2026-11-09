@@ -6,8 +6,13 @@ import { API_BASE } from '../config/api';
 const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
+  const getInitialToken = () => {
+    const t = localStorage.getItem('token');
+    return t && t !== 'undefined' && t !== 'null' ? t : null;
+  };
+
   const [user, setUser] = useState(null);
-  const [token, setToken] = useState(localStorage.getItem('token') || null);
+  const [token, setToken] = useState(getInitialToken);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -33,6 +38,9 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (email, password, userType = 'employee') => {
     const { data } = await axios.post(API_BASE + '/auth/login', { email, password, userType });
+    if (!data || !data.token) {
+      throw new Error(data?.message || 'Invalid server response: Token missing');
+    }
     setToken(data.token);
     localStorage.setItem('token', data.token);
     setUser(data.user);
@@ -42,6 +50,9 @@ export const AuthProvider = ({ children }) => {
 
   const registerUser = async (userData) => {
     const { data } = await axios.post(API_BASE + '/auth/register', userData);
+    if (!data || !data.token) {
+      throw new Error(data?.message || 'Invalid server response: Token missing');
+    }
     setToken(data.token);
     localStorage.setItem('token', data.token);
     setUser(data.user);

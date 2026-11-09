@@ -11,7 +11,7 @@ router.use(verifyToken, authorizeUserType('customer'));
 router.get('/profile', async (req, res) => {
   try {
     const [rows] = await pool.query('SELECT customer_id, customer_name, email, phone, address FROM customer WHERE customer_id = ?', [req.user.id]);
-    if (rows.length === 0) return res.status(404).json({ message: 'Customer not found' });
+    if (rows.length === 0) return res.status(401).json({ message: 'Customer not found' });
     res.json(rows[0]);
   } catch (error) {
     res.status(500).json({ message: 'Error fetching profile', error: error.message });

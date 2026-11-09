@@ -36,12 +36,12 @@ export const login = async (req, res) => {
     if (userType === 'admin') {
       const [rows] = await pool.query('SELECT * FROM employee WHERE email = ?', [email]);
       entity = rows[0];
-      if (!entity) return res.status(404).json({ message: 'User not found' });
+      if (!entity) return res.status(401).json({ message: 'Invalid credentials' });
       const isMatch = await bcrypt.compare(password, entity.password);
       if (!isMatch) return res.status(401).json({ message: 'Invalid credentials' });
       
       if (entity.role !== 'Admin') {
-        return res.status(403).json({ message: 'Access denied. Admin portal requires Admin role.' });
+        return res.status(401).json({ message: 'Access denied. Admin portal requires Admin role.' });
       }
 
       tokenPayload = { id: entity.employee_id, name: entity.employee_name, role: entity.role, userType: 'employee' };
@@ -50,12 +50,12 @@ export const login = async (req, res) => {
     } else if (userType === 'employee') {
       const [rows] = await pool.query('SELECT * FROM employee WHERE email = ?', [email]);
       entity = rows[0];
-      if (!entity) return res.status(404).json({ message: 'User not found' });
+      if (!entity) return res.status(401).json({ message: 'Invalid credentials' });
       const isMatch = await bcrypt.compare(password, entity.password);
       if (!isMatch) return res.status(401).json({ message: 'Invalid credentials' });
 
       if (entity.role !== 'Cashier') {
-         return res.status(403).json({ message: 'Access denied. Employee portal requires Cashier role.' });
+         return res.status(401).json({ message: 'Access denied. Employee portal requires Cashier role.' });
       }
 
       tokenPayload = { id: entity.employee_id, name: entity.employee_name, role: entity.role, userType: 'employee' };
@@ -64,7 +64,7 @@ export const login = async (req, res) => {
     } else if (userType === 'supplier') {
       const [rows] = await pool.query('SELECT * FROM supplier WHERE email = ?', [email]);
       entity = rows[0];
-      if (!entity) return res.status(404).json({ message: 'Supplier not found' });
+      if (!entity) return res.status(401).json({ message: 'Invalid credentials' });
       if (!entity.password) return res.status(401).json({ message: 'Supplier account not set up for portal login.' });
       const isMatch = await bcrypt.compare(password, entity.password);
       if (!isMatch) return res.status(401).json({ message: 'Invalid credentials' });
@@ -74,7 +74,7 @@ export const login = async (req, res) => {
     } else if (userType === 'customer') {
       const [rows] = await pool.query('SELECT * FROM customer WHERE email = ?', [email]);
       entity = rows[0];
-      if (!entity) return res.status(404).json({ message: 'Customer not found' });
+      if (!entity) return res.status(401).json({ message: 'Invalid credentials' });
       if (!entity.password) return res.status(401).json({ message: 'Customer account not set up for portal login.' });
       const isMatch = await bcrypt.compare(password, entity.password);
       if (!isMatch) return res.status(401).json({ message: 'Invalid credentials' });
@@ -180,19 +180,19 @@ export const getMe = async (req, res) => {
     
     if (userType === 'employee') {
       const [rows] = await pool.query('SELECT employee_id, employee_name, email, role FROM employee WHERE employee_id = ?', [id]);
-      if (rows.length === 0) return res.status(404).json({ message: 'User not found' });
+      if (rows.length === 0) return res.status(401).json({ message: 'User not found' });
       const entity = rows[0];
       return res.json({ id: entity.employee_id, name: entity.employee_name, email: entity.email, role: entity.role, userType: 'employee' });
 
     } else if (userType === 'supplier') {
       const [rows] = await pool.query('SELECT supplier_id, supplier_name, email FROM supplier WHERE supplier_id = ?', [id]);
-      if (rows.length === 0) return res.status(404).json({ message: 'Supplier not found' });
+      if (rows.length === 0) return res.status(401).json({ message: 'Supplier not found' });
       const entity = rows[0];
       return res.json({ id: entity.supplier_id, name: entity.supplier_name, email: entity.email, role: 'Supplier', userType: 'supplier' });
 
     } else if (userType === 'customer') {
       const [rows] = await pool.query('SELECT customer_id, customer_name, email FROM customer WHERE customer_id = ?', [id]);
-      if (rows.length === 0) return res.status(404).json({ message: 'Customer not found' });
+      if (rows.length === 0) return res.status(401).json({ message: 'Customer not found' });
       const entity = rows[0];
       return res.json({ id: entity.customer_id, name: entity.customer_name, email: entity.email, role: 'Customer', userType: 'customer' });
     }
