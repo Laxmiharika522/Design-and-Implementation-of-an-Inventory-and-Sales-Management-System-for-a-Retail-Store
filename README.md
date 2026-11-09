@@ -62,14 +62,14 @@ Designed as a modern, high-conversion online supermarket storefront for retail s
 - **Order Tracking & Invoices**: Itemized order history detailing past transactions, delivery addresses, transaction dates, and printable invoice breakdowns.
 - **Customer Profile**: Personal account management for updating phone numbers, emails, and primary delivery addresses.
 
-#### 📸 Customer Portal Showcase (Full Gallery):
+#### 📸 Customer Portal Showcase:
 | Grocery Catalog Storefront | Catalog Category Filtering |
 | :---: | :---: |
 | ![Customer Shop](images/Customer_Portal/Customer_Dashboard1.png) | ![Customer Catalog Categories](images/Customer_Portal/Customer_Dashboard2.png) |
 
-| Order History & Digital Receipts | Customer Account & Address Profile | Customer Portal Login |
-| :---: | :---: | :---: |
-| ![Customer Orders](images/Customer_Portal/Customer_Orders.png) | ![Customer Profile](images/Customer_Portal/Customer_Profile.png) | ![Customer Sign In](images/Customer_Portal/Customer_Portal_SignIn.png) |
+| Order History & Digital Receipts | Customer Account & Address Profile |
+| :---: | :---: |
+| ![Customer Orders](images/Customer_Portal/Customer_Orders.png) | ![Customer Profile](images/Customer_Portal/Customer_Profile.png) |
 
 ---
 
@@ -83,25 +83,30 @@ The central command hub for store owners, general managers, and inventory superv
 - **Staff Governance**: Configure access credentials and assign system roles (`Admin`, `Cashier`, `Employee`).
 - **Audit & Financial Reports**: Granular transaction logs with custom date filters, payment distribution metrics (Cash, UPI, Cards, Net Banking), and printable tax invoices.
 
+#### 📸 Admin Portal Showcase:
+| Executive Dashboard | Inventory Stock Updates |
+| :---: | :---: |
+| ![Admin Dashboard](images/Admin_Portal/Admin_Dashboard.png) | ![Inventory Update](images/Admin_Portal/Admin_Inventory_Update.png) |
+
+| Purchase Orders from Suppliers | Financial & Tax Reports |
+| :---: | :---: |
+| ![Supplier Orders](images/Admin_Portal/Admin_Supplier_Order.png) | ![Reports & Analytics](images/Admin_Portal/Admin_Reports.png) |
+
 <details>
-<summary><b>📸 Click to Expand Admin Portal Gallery (13 Screenshots)</b></summary>
+<summary><b>📸 Click to Expand Additional Admin Screens (Products, Categories, Shifts, Audit Logs)</b></summary>
 <br/>
 
-| Executive Dashboard | Employee Shift Overview | All Products Catalog |
+| All Products Catalog | Employee Shift Overview | Category Management |
 | :---: | :---: | :---: |
-| ![Admin Dashboard](images/Admin_Portal/Admin_Dashboard.png) | ![Admin Employee Dashboard](images/Admin_Portal/Admin_Employee_Dashboard.png) | ![All Products](images/Admin_Portal/Admin_All_Products.png) |
+| ![All Products](images/Admin_Portal/Admin_All_Products.png) | ![Admin Employee Dashboard](images/Admin_Portal/Admin_Employee_Dashboard.png) | ![Category Management](images/Admin_Portal/Admin_Category.png) |
 
-| Category Management | Inventory Stock Updates | Purchase Orders from Suppliers |
+| Sales Order Records | Sales Transaction Audit | Supplier Directory |
 | :---: | :---: | :---: |
-| ![Category Management](images/Admin_Portal/Admin_Category.png) | ![Inventory Update](images/Admin_Portal/Admin_Inventory_Update.png) | ![Supplier Orders](images/Admin_Portal/Admin_Supplier_Order.png) |
+| ![Sales Order](images/Admin_Portal/Admin_Sales_Order.png) | ![Sales Transactions](images/Admin_Portal/Admin_Sales_Transactions.png) | ![Admin Suppliers](images/Admin_Portal/Admin_Suppliers.png) |
 
-| Sales Order Records | Sales Transaction Audit | Financial & Tax Reports |
-| :---: | :---: | :---: |
-| ![Sales Order](images/Admin_Portal/Admin_Sales_Order.png) | ![Sales Transactions](images/Admin_Portal/Admin_Sales_Transactions.png) | ![Reports & Analytics](images/Admin_Portal/Admin_Reports.png) |
-
-| Supplier Master Directory | Store Customer Directory | Staff & Employee Roles | Admin Authentication |
-| :---: | :---: | :---: | :---: |
-| ![Admin Suppliers](images/Admin_Portal/Admin_Suppliers.png) | ![Admin Customers](images/Admin_Portal/Admin_Customers.png) | ![Admin Employees](images/Admin_Portal/Admin_Employees.png) | ![Admin Sign In](images/Admin_Portal/Admin_Sign_In.png) |
+| Store Customer Directory | Staff & Employee Roles |
+| :---: | :---: |
+| ![Admin Customers](images/Admin_Portal/Admin_Customers.png) | ![Admin Employees](images/Admin_Portal/Admin_Employees.png) |
 
 </details>
 
@@ -115,19 +120,14 @@ Engineered for counter cashiers and retail sales associates for fast checkout:
 - **Customer Lookup**: Fast customer profile lookup or instant on-counter customer registration.
 - **Shift & Sales History**: Comprehensive sales audit log for reviewing transactions processed during the cashier's active shift.
 
-<details>
-<summary><b>📸 Click to Expand Employee & POS Portal Gallery (5 Screenshots)</b></summary>
-<br/>
-
-| Cashier POS Interface | Sales Order Processing | Customer Management |
-| :---: | :---: | :---: |
-| ![Employee Dashboard](images/Employee_Portal/Employee_Dashboard.png) | ![Employee Sales Order](images/Employee_Portal/Employee_Sales_Order.png) | ![Employee Customers](images/Employee_Portal/Employee_Customers.png) |
-
-| Sales Records Audit | Employee Authentication |
+#### 📸 Employee & POS Portal Showcase:
+| Cashier POS Interface | Sales Order Processing |
 | :---: | :---: |
-| ![Employee Sales](images/Employee_Portal/Employee_Sales.png) | ![Employee Sign In](images/Employee_Portal/Employee_SignIn.png) |
+| ![Employee Dashboard](images/Employee_Portal/Employee_Dashboard.png) | ![Employee Sales Order](images/Employee_Portal/Employee_Sales_Order.png) |
 
-</details>
+| Customer Directory & Registration | Sales Records Audit |
+| :---: | :---: |
+| ![Employee Customers](images/Employee_Portal/Employee_Customers.png) | ![Employee Sales](images/Employee_Portal/Employee_Sales.png) |
 
 ---
 
@@ -139,17 +139,22 @@ Dedicated B2B vendor portal enabling external distributors and wholesalers to ma
 - **Payments & Ledger**: Real-time reconciliation of total invoiced amounts, completed payments, and outstanding store balances.
 - **Bank & Business Profile**: Self-service management of payout banking details (IFSC, Account Number, Bank Name) and dispatch warehouse contacts.
 
+#### 📸 Supplier Portal Showcase:
+| Supplier Fulfillment Dashboard | Purchase Orders Pipeline |
+| :---: | :---: |
+| ![Supplier Dashboard](images/Supplier_Portal/Supplier_Portal_Dashboard.png) | ![Supplier Purchase Orders](images/Supplier_Portal/Supplier_Portal_Purchase_Order.png) |
+
+| Logistics & Delivery Details | Payments & Ledger Balance |
+| :---: | :---: |
+| ![Delivery Details](images/Supplier_Portal/Supplier_Portal_Delivery_Details.png) | ![Supplier Payments](images/Supplier_Portal/Supplier_Portal_Payments.png) |
+
 <details>
-<summary><b>📸 Click to Expand Supplier Portal Gallery (6 Screenshots)</b></summary>
+<summary><b>📸 Click to Expand Additional Supplier Screens (Bank & Warehouse Profile)</b></summary>
 <br/>
 
-| Supplier Dashboard | Purchase Orders Pipeline | Logistics & Delivery Details |
-| :---: | :---: | :---: |
-| ![Supplier Dashboard](images/Supplier_Portal/Supplier_Portal_Dashboard.png) | ![Supplier Purchase Orders](images/Supplier_Portal/Supplier_Portal_Purchase_Order.png) | ![Delivery Details](images/Supplier_Portal/Supplier_Portal_Delivery_Details.png) |
-
-| Payments & Ledger | Supplier Bank Profile | Supplier Authentication |
-| :---: | :---: | :---: |
-| ![Supplier Payments](images/Supplier_Portal/Supplier_Portal_Payments.png) | ![Supplier Profile](images/Supplier_Portal/Supplier_Portal_profile.png) | ![Supplier Sign In](images/Supplier_Portal/Supplier_Portal_Signin.png) |
+| Supplier Bank & Warehouse Profile |
+| :---: |
+| ![Supplier Profile](images/Supplier_Portal/Supplier_Portal_profile.png) |
 
 </details>
 
