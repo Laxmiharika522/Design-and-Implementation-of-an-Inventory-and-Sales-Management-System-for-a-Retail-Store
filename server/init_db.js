@@ -11,7 +11,18 @@ const __dirname = path.dirname(__filename);
 async function initDB() {
   console.log('Starting Database Initialization...');
 
-  // Support Railway's MYSQL_PUBLIC_URL connection string
+  const shouldEnableSSL = () => {
+    if (process.env.DB_SSL === 'true') return true;
+    if (process.env.DB_SSL === 'false') return false;
+    const isRemoteHost = process.env.DB_HOST && !['localhost', '127.0.0.1'].includes(process.env.DB_HOST.toLowerCase());
+    return process.env.NODE_ENV === 'production' && isRemoteHost;
+  };
+
+  const sslConfig = shouldEnableSSL()
+    ? { rejectUnauthorized: process.env.DB_SSL_REJECT_UNAUTHORIZED === 'true' }
+    : undefined;
+
+  // Support cloud DATABASE_URL / MYSQL_PUBLIC_URL connection string or individual env vars
   const connectionUrl = process.env.MYSQL_PUBLIC_URL || process.env.DATABASE_URL;
   let connConfig;
 
@@ -24,20 +35,21 @@ async function initDB() {
       password: url.password,
       database: url.pathname.replace('/', ''),
       multipleStatements: true,
-      ssl: { rejectUnauthorized: false }
+      ssl: sslConfig || { rejectUnauthorized: false }
     };
   } else {
     connConfig = {
-      host: process.env.DB_HOST,
+      host: process.env.DB_HOST || 'localhost',
       port: parseInt(process.env.DB_PORT || '3306', 10),
-      user: process.env.DB_USER,
-      password: process.env.DB_PASSWORD,
-      database: process.env.DB_NAME,
-      multipleStatements: true
+      user: process.env.DB_USER || 'root',
+      password: process.env.DB_PASSWORD || '',
+      database: process.env.DB_NAME || 'retail_db',
+      multipleStatements: true,
+      ssl: sslConfig
     };
   }
 
-  // Create database if it doesn't exist yet
+  // Create database if it doesn't exist yet (on local or self-hosted; on RDS this may already exist)
   const dbName = connConfig.database;
   const initConfigWithoutDB = { ...connConfig };
   delete initConfigWithoutDB.database;
@@ -47,7 +59,8 @@ async function initDB() {
     await rootConn.query(`CREATE DATABASE IF NOT EXISTS \`${dbName}\``);
     await rootConn.end();
   } catch (err) {
-    // Ignore if user permissions don't allow CREATE DATABASE
+    // Expected on AWS RDS if master user has restricted root privileges or DB already created
+    console.log(`Note: CREATE DATABASE check skipped or completed: ${err.message}`);
   }
 
   // Create a dedicated connection with multipleStatements true

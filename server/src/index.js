@@ -1,6 +1,9 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import fs from 'fs';
 import { verifyToken, authorizeUserType } from './middleware/authMiddleware.js';
 import pool from './config/db.js';
 import authRoutes from './routes/authRoutes.js';
@@ -19,14 +22,50 @@ import customerPortalRoutes from './routes/customerPortalRoutes.js';
 
 dotenv.config();
 
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
 const app = express();
-app.use(cors());
+
+// Configurable CORS for AWS and local dev
+const allowedOrigins = process.env.CORS_ORIGIN
+  ? process.env.CORS_ORIGIN.split(',').map((s) => s.trim())
+  : '*';
+
+app.use(
+  cors({
+    origin: allowedOrigins === '*' ? true : allowedOrigins,
+    credentials: true,
+  })
+);
 app.use(express.json());
 
-const PORT = process.env.PORT || 5000;
+const PORT = parseInt(process.env.PORT || '5000', 10);
 
-app.get('/api/health', (req, res) => {
-  res.json({ status: 'OK', message: 'Server is running' });
+// Health check endpoints (AWS ALB, App Runner, ECS, Route 53)
+app.get(['/health', '/api/health'], async (req, res) => {
+  try {
+    await pool.query('SELECT 1');
+    res.status(200).json({
+      status: 'UP',
+      uptime: process.uptime(),
+      timestamp: new Date().toISOString(),
+      database: 'connected',
+    });
+  } catch (err) {
+    res.status(503).json({
+      status: 'DEGRADED',
+      uptime: process.uptime(),
+      timestamp: new Date().toISOString(),
+      database: 'disconnected',
+      error: err.message,
+    });
+  }
+});
+
+// Lightweight liveness ping
+app.get(['/live', '/api/live'], (req, res) => {
+  res.status(200).json({ status: 'OK' });
 });
 
 // Routes
@@ -44,6 +83,31 @@ app.use('/api/reports', verifyToken, authorizeUserType('employee'), reportRoutes
 app.use('/api/tax-rates', verifyToken, authorizeUserType('employee'), taxRatesRoutes);
 app.use('/api/supplier', supplierPortalRoutes);
 app.use('/api/customer', customerPortalRoutes);
+
+// Optional: Serve client build for unified single-container deployment on AWS
+const candidateStaticPaths = [
+  path.resolve(__dirname, '../../../client/dist'),
+  path.resolve(__dirname, '../../client/dist'),
+  path.resolve(__dirname, '../public'),
+];
+const clientDistPath = candidateStaticPaths.find((p) => fs.existsSync(p));
+
+if (clientDistPath) {
+  console.log(`Serving static client files from: ${clientDistPath}`);
+  app.use(express.static(clientDistPath));
+  // SPA Fallback for client routing (excluding API & health check routes)
+  app.use((req, res, next) => {
+    if (
+      req.method !== 'GET' ||
+      req.path.startsWith('/api') ||
+      req.path.startsWith('/health') ||
+      req.path.startsWith('/live')
+    ) {
+      return next();
+    }
+    res.sendFile(path.join(clientDistPath, 'index.html'));
+  });
+}
 
 // Start server
 const ensurePurchaseSchema = async (connection) => {
@@ -109,19 +173,62 @@ const ensurePurchaseSchema = async (connection) => {
   }
 };
 
-const startServer = async () => {
-  try {
-    const connection = await pool.getConnection();
-    console.log('Database connected successfully using raw MySQL.');
-    await ensurePurchaseSchema(connection);
-    connection.release();
-    
-    app.listen(PORT, () => {
-      console.log(`Server is running on port ${PORT}`);
-    });
-  } catch (err) {
-    console.error('Failed to connect to database:', err);
+const connectWithRetry = async (maxRetries = 5, delayMs = 3000) => {
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      console.log(`Connecting to database (attempt ${attempt}/${maxRetries})...`);
+      const connection = await pool.getConnection();
+      console.log('Database connected successfully using raw MySQL.');
+      await ensurePurchaseSchema(connection);
+      connection.release();
+      return true;
+    } catch (err) {
+      console.error(`Database connection attempt ${attempt} failed: ${err.message}`);
+      if (attempt < maxRetries) {
+        console.log(`Retrying in ${delayMs / 1000} seconds...`);
+        await new Promise((resolve) => setTimeout(resolve, delayMs));
+      }
+    }
   }
+  return false;
+};
+
+const startServer = async () => {
+  const server = app.listen(PORT, '0.0.0.0', () => {
+    console.log(`Server is running on http://0.0.0.0:${PORT}`);
+  });
+
+  // Connect to DB asynchronously so HTTP server can answer liveness probes immediately
+  connectWithRetry().then((connected) => {
+    if (!connected) {
+      console.warn('⚠️ WARNING: Database connection retries exhausted. Check DB_HOST, DB_USER, DB_PASSWORD and AWS Security Groups.');
+    }
+  });
+
+  // Graceful shutdown handling for AWS ECS / App Runner / Beanstalk / Docker
+  const gracefulShutdown = (signal) => {
+    console.log(`\nReceived ${signal}. Closing server gracefully...`);
+    server.close(async () => {
+      console.log('HTTP server closed.');
+      try {
+        await pool.end();
+        console.log('Database pool closed.');
+        process.exit(0);
+      } catch (err) {
+        console.error('Error closing database pool:', err);
+        process.exit(1);
+      }
+    });
+
+    // Force exit after 10s if connections fail to close
+    setTimeout(() => {
+      console.error('Forced shutdown due to timeout.');
+      process.exit(1);
+    }, 10000);
+  };
+
+  process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
+  process.on('SIGINT', () => gracefulShutdown('SIGINT'));
 };
 
 startServer();
