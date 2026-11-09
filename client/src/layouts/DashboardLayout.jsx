@@ -13,11 +13,12 @@ import clsx from 'clsx';
 import { API_BASE } from '../config/api';
 
 export const ProtectedRoute = ({ roles, children }) => {
-  const { user, token } = useAuth();
+  const { user, token, loading } = useAuth();
+  if (loading) return null;
   if (!token) return <Navigate to="/login" replace />;
   // Block non-employees from the employee portal
-  if (user?.userType && user.userType !== 'employee') return <Navigate to="/login" replace />;
-  if (roles && !roles.includes(user?.role)) return <Navigate to="/unauthorized" replace />;
+  if (user && user.userType !== 'employee') return <Navigate to="/login" replace />;
+  if (roles && user && !roles.includes(user?.role)) return <Navigate to="/unauthorized" replace />;
   if (children) return children;
   return <Outlet />;
 };

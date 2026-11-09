@@ -6,9 +6,10 @@ import { LogOut, ShoppingBag, ClipboardList, User, ChevronLeft, ChevronRight, Sh
 import clsx from 'clsx';
 
 export const CustomerProtectedRoute = () => {
-  const { user, token } = useAuth();
+  const { user, token, loading } = useAuth();
+  if (loading) return null;
   if (!token) return <Navigate to="/login" replace />;
-  if (user?.userType !== 'customer') return <Navigate to="/login" replace />;
+  if (user && user.userType !== 'customer') return <Navigate to="/login" replace />;
   return <Outlet />;
 };
 

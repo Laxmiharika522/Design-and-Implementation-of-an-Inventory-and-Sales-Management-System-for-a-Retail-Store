@@ -9,9 +9,10 @@ import axios from 'axios';
 import { API_BASE } from '../config/api';
 
 export const SupplierProtectedRoute = () => {
-  const { user, token } = useAuth();
+  const { user, token, loading } = useAuth();
+  if (loading) return null;
   if (!token) return <Navigate to="/login" replace />;
-  if (user?.userType !== 'supplier') return <Navigate to="/login" replace />;
+  if (user && user.userType !== 'supplier') return <Navigate to="/login" replace />;
   return <Outlet />;
 };
 

@@ -8,7 +8,7 @@
  */
 export const getApiBase = () => {
   const envUrl = import.meta.env.VITE_API_URL;
-  if (envUrl && typeof envUrl === 'string' && envUrl.trim() !== '') {
+  if (envUrl && typeof envUrl === 'string' && envUrl.trim() !== '' && envUrl !== '/api') {
     return envUrl.replace(/\/+$/, '');
   }
   if (import.meta.env.PROD) {
