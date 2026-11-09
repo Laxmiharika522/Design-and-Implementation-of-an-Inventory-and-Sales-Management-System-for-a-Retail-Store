@@ -17,6 +17,7 @@ The deployment described here uses **Amazon CloudFront**, **Amazon S3**, **Amazo
 7. [Security considerations](#7-security-considerations)
 8. [Engineering challenges and solutions](#8-engineering-challenges-and-solutions)
 9. [Verification and maintenance](#9-verification-and-maintenance)
+10. [Estimated cost and resource budgeting](#10-estimated-cost-and-resource-budgeting)
 
 ---
 
@@ -404,4 +405,30 @@ aws cloudfront create-invalidation \
   --distribution-id <CLOUDFRONT_DISTRIBUTION_ID> \
   --paths "/*"
 ```
+
+---
+
+## 10. Estimated cost and resource budgeting
+
+The table below outlines the estimated operational costs for this deployment running continuously in **US East (N. Virginia) — `us-east-1`**.
+
+### 10.1 Cost breakdown
+
+| AWS Service | Resource Class & Specs | AWS Free Tier (First 12 Months) | Standard On-Demand (No Free Tier) |
+| :--- | :--- | :---: | :---: |
+| **Amazon EC2** | `t3.micro` (Ubuntu Linux, 2 vCPU, 1 GB RAM) | **$0.00** *(750 hrs/month free)* | ~$7.59 / month |
+| **EBS Storage (EC2)** | 20 GB General Purpose SSD (`gp3`/`gp2`) | **$0.00** *(Up to 30 GB free)* | ~$1.60 / month |
+| **Public IPv4 Address** | AWS IPv4 charge (`$0.005/hr`) | **$0.00 – $3.65 / mo** *(AWS offers 750 hr credit in free tier)* | ~$3.65 / month |
+| **Amazon RDS MySQL** | `db.t4g.micro` / `db.t3.micro` (Single-AZ) | **$0.00** *(750 hrs/month free)* | ~$11.68 – $12.41 / month |
+| **RDS Storage** | 20 GB General Purpose SSD | **$0.00** *(20 GB free)* | ~$2.30 / month |
+| **Amazon S3** | Production React build (< 25 MB static storage) | **$0.00** *(5 GB free)* | < $0.05 / month |
+| **Amazon CloudFront** | CDN & Edge Routing (SSL termination) | **$0.00** *(1 TB transfer & 10M requests Always Free)* | **$0.00** *(Always Free Tier)* |
+| **Data Transfer** | Intranet VPC (EC2 ➔ RDS) | **$0.00** | < $0.50 / month |
+| **ESTIMATED TOTAL** | **Full 24/7 Production Deployment** | **~$0.00 to $3.65 / month** | **~$27.00 / month** (≈ ₹2,250 INR) |
+
+### 10.2 Cost optimization strategies
+
+- **Stop compute during inactive periods**: Stopping the EC2 instance and RDS database when not demonstrating suspends hourly compute charges. You only pay for persistent storage (EBS volume + RDS storage), dropping the cost to approximately **~$3.90 / month**.
+- **Automated instance scheduling**: Use AWS EventBridge or simple Lambda functions to start resources before operational hours and shut them down overnight to cut compute costs by ~40%.
+- **Single-AZ deployment**: Keeping both the EC2 instance and RDS database in the same Availability Zone eliminates cross-AZ data transfer fees.
 
